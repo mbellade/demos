@@ -40,7 +40,7 @@ public class GetResultCount {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
-			QueryImplementor fromPerson = session.createQuery( "from Person" );
+			QueryImplementor<Person> fromPerson = session.createQuery( "from Person", Person.class );
 			long resultCount = fromPerson.getResultCount();
 			// it triggers a `select count(*) from Person p1_0
 			assertThat(resultCount).isEqualTo( 2 );

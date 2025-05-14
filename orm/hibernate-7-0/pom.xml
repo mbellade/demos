@@ -82,6 +82,20 @@
 				<version>3.14.0</version>
 				<configuration>
 					<release>17</release>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.hibernate.orm</groupId>
+							<artifactId>hibernate-processor</artifactId>
+							<version>${version.org.hibernate.orm}</version>
+							<!-- Optionally exclude transitive dependencies -->
+							<exclusions>
+								<exclusion>
+									<groupId>org.sample</groupId>
+									<artifactId>sample-dependency</artifactId>
+								</exclusion>
+							</exclusions>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -41,6 +41,23 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.hibernate.models</groupId>
+			<artifactId>hibernate-models</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.data</groupId>
+			<artifactId>jakarta.data-api</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>${version.org.postgresql}</version>
@@ -87,13 +104,11 @@
 							<groupId>org.hibernate.orm</groupId>
 							<artifactId>hibernate-processor</artifactId>
 							<version>${version.org.hibernate.orm}</version>
-							<!-- Optionally exclude transitive dependencies -->
-							<exclusions>
-								<exclusion>
-									<groupId>org.sample</groupId>
-									<artifactId>sample-dependency</artifactId>
-								</exclusion>
-							</exclusions>
+						</path>
+						<path>
+							<groupId>org.hibernate.orm</groupId>
+							<artifactId>hibernate-jpamodelgen</artifactId>
+							<version>${version.org.hibernate.orm}</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

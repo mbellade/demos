@@ -11,7 +11,7 @@
 		<version.com.h2database>2.3.232</version.com.h2database>
 		<version.org.postgresql>42.7.5</version.org.postgresql>
 		<version.junit-jupiter>5.11.4</version.junit-jupiter>
-		<version.org.hibernate.orm>7.0.0.CR1</version.org.hibernate.orm>
+		<version.org.hibernate.orm>7.0.0.CR2</version.org.hibernate.orm>
 		<version.org.assertj.assertj-core>3.27.3</version.org.assertj.assertj-core>
 	</properties>
 

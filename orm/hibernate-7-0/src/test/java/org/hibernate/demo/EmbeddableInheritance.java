@@ -1,4 +1,4 @@
-package org.hibernate.bugs;
+package org.hibernate.demo;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

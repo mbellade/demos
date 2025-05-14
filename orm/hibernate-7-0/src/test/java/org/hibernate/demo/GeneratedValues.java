@@ -1,4 +1,4 @@
-package org.hibernate.bugs;
+package org.hibernate.demo;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.SourceType;

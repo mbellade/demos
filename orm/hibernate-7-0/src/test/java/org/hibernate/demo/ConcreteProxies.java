@@ -1,4 +1,4 @@
-package org.hibernate.bugs;
+package org.hibernate.demo;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.ConcreteProxy;

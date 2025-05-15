@@ -34,42 +34,52 @@ class ConcreteProxies {
 	@Test
 	public void testFind(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			final Owner parent1 = session.find( Owner.class, 1L );
-			assertThat( parent1.getSingle() ).isInstanceOf( Cat.class );
-			assertThat( Hibernate.isInitialized( parent1.getSingle() ) ).isFalse();
-			final Cat proxy = (Cat) parent1.getSingle();
-			assertThat( proxy.getId() ).isEqualTo( 1L );
-			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+			final Owner owner1 = session.find( Owner.class, 1L );
+
+			// The retrieved association has the correct type and is lazy
+			assertThat( owner1.getAnimal() ).isInstanceOf( Cat.class );
+			assertThat( Hibernate.isInitialized( owner1.getAnimal() ) ).isFalse();
+
+			// Laziness is maintained even when casting or accessing the ID
+			final Cat cat = (Cat) owner1.getAnimal();
+			assertThat( cat.getId() ).isEqualTo( 1L );
+			assertThat( Hibernate.isInitialized( cat ) ).isFalse();
 		} );
 	}
 
 	@Test
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			final Owner parent2 = session.createQuery(
+			final Owner owner2 = session.createQuery(
 					"from Owner where id = 2",
 					Owner.class
 			).getSingleResult();
-			assertThat( parent2.getSingle() ).isInstanceOf( Fish.class );
-			assertThat( Hibernate.isInitialized( parent2.getSingle() ) ).isFalse();
-			final Fish proxy = (Fish) parent2.getSingle();
-			assertThat( proxy.getId() ).isEqualTo( 2L );
-			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+
+			// The retrieved association has the correct type and is lazy
+			assertThat( owner2.getAnimal() ).isInstanceOf( Fish.class );
+			assertThat( Hibernate.isInitialized( owner2.getAnimal() ) ).isFalse();
+
+			if ( owner2.getAnimal() instanceof Fish fish ) {
+				// Laziness is maintained even when casting or accessing the ID
+				assertThat( fish.getId() ).isEqualTo( 2L );
+				assertThat( Hibernate.isInitialized( fish ) ).isFalse();
+			}
 		} );
 	}
 
 	@Test
 	public void testGetReference(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			final Mammal proxy1 = session.getReference( Mammal.class, 1L );
-			assertThat( proxy1 ).isInstanceOf( Cat.class );
-			assertThat( Hibernate.isInitialized( proxy1 ) ).isFalse();
-			final Cat subChild1 = (Cat) proxy1;
-			assertThat( Hibernate.isInitialized( subChild1 ) ).isFalse();
+			final Mammal mammal = session.getReference( Mammal.class, 1L );
+			assertThat( mammal ).isInstanceOf( Cat.class );
+			assertThat( Hibernate.isInitialized( mammal ) ).isFalse();
 
-			System.out.println( "\nRetrieving mammal: " + proxy1.getId() + "\n" );
+			final Cat cat = (Cat) mammal;
+			assertThat( Hibernate.isInitialized( cat ) ).isFalse();
 
-			assertThat( subChild1.getClaws() ).isEqualTo( "sharp" );
+			System.out.println( "\nRetrieving mammal: " + mammal.getId() + "\n" );
+
+			assertThat( cat.getClaws() ).isEqualTo( "sharp" );
 		} );
 	}
 
@@ -92,18 +102,18 @@ class ConcreteProxies {
 		private Long id;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		private Animal single;
+		private Animal animal;
 
 		public Owner() {
 		}
 
-		public Owner(Long id, Animal single) {
+		public Owner(Long id, Animal animal) {
 			this.id = id;
-			this.single = single;
+			this.animal = animal;
 		}
 
-		public Animal getSingle() {
-			return single;
+		public Animal getAnimal() {
+			return animal;
 		}
 	}
 

@@ -12,7 +12,7 @@ public class Vegetable {
 
 	private String name;
 
-	Vegetable() {
+	public Vegetable() {
 	}
 
 	public Vegetable(String name) {

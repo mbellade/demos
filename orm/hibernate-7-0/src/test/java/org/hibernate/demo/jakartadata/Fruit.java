@@ -12,7 +12,7 @@ public class Fruit {
 
 	private String name;
 
-	Fruit() {
+	public Fruit() {
 	}
 
 	public Fruit(String name) {

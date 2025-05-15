@@ -16,19 +16,20 @@ import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		EmbeddableInheritance.TestEntity.class,
 		EmbeddableInheritance.Vehicle.class,
 		EmbeddableInheritance.Bicycle.class,
 		EmbeddableInheritance.MountainBike.class,
 		EmbeddableInheritance.Car.class,
-} )
+})
 @SessionFactory
 public class EmbeddableInheritance {
 	@Test
 	public void testFind(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final TestEntity result = session.find( TestEntity.class, 1L );
+			// Retrieved vehicle of type Bicycle via find
 			assertThat( result.getVehicle().getWheels() ).isEqualTo( 2 );
 			assertThat( result.getVehicle().getSpeed() ).isEqualTo( 25 );
 			assertThat( result.getVehicle() ).isExactlyInstanceOf( Bicycle.class );
@@ -43,6 +44,7 @@ public class EmbeddableInheritance {
 					"from TestEntity where id = 2",
 					TestEntity.class
 			).getSingleResult();
+			// Retrieved vehicle of type Car via entity query
 			assertThat( result.getVehicle().getWheels() ).isEqualTo( 4 );
 			assertThat( result.getVehicle().getSpeed() ).isEqualTo( 200 );
 			assertThat( result.getVehicle() ).isExactlyInstanceOf( Car.class );
@@ -57,10 +59,10 @@ public class EmbeddableInheritance {
 					"select vehicle from TestEntity where id = 3",
 					Vehicle.class
 			).getSingleResult();
+			// Retrieved vehicle of type MountainBike via selection query
 			assertThat( result.getWheels() ).isEqualTo( 2 );
 			assertThat( result.getSpeed() ).isEqualTo( 35 );
 			assertThat( result ).isExactlyInstanceOf( MountainBike.class );
-
 			final MountainBike mountainBike = (MountainBike) result;
 			assertThat( ( mountainBike ).getGears() ).isEqualTo( 12 );
 			assertThat( ( mountainBike ).getSuspensions() ).isEqualTo( SuspensionType.FULL );
@@ -84,12 +86,13 @@ public class EmbeddableInheritance {
 			assertThat( result.getVehicle().getSpeed() ).isEqualTo( 22 );
 			assertThat( ( (Bicycle) result.getVehicle() ).getGears() ).isEqualTo( 7 );
 
-			// change type of embeddable
+			// change type of embeddable in place
 			result.setVehicle( new MountainBike( 25, 8, SuspensionType.FRONT ) );
 		} );
 
 		scope.inTransaction( session -> {
 			final TestEntity result = session.find( TestEntity.class, 4L );
+			// The new MountainBike embeddable is retrieved
 			assertThat( result.getVehicle().getSpeed() ).isEqualTo( 25 );
 			assertThat( result.getVehicle() ).isExactlyInstanceOf( MountainBike.class );
 			assertThat( ( (MountainBike) result.getVehicle() ).getGears() ).isEqualTo( 8 );
@@ -213,8 +216,6 @@ public class EmbeddableInheritance {
 		FRONT,
 		FULL
 	}
-
-	;
 
 	@Embeddable
 	static class Car extends Vehicle {

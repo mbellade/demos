@@ -32,8 +32,10 @@ class GeneratedValues {
 			transaction.setAmount( BigDecimal.ONE );
 			session.persist( transaction );
 
+			// Flush data to database to trigger value generation
 			session.flush();
 
+			// Generated data has been retrieved from the database
 			assertThat( transaction.getId() ).isNotNull();
 			assertThat( transaction.getType() ).isEqualTo( "unknown" );
 			assertThat( transaction.getUpdatedAt() ).isAfter( LocalDateTime.now().minusSeconds( 10 ) );
@@ -48,8 +50,10 @@ class GeneratedValues {
 			final Transaction transaction = session.find( Transaction.class, id );
 			transaction.setAmount( BigDecimal.ZERO );
 
+			// Flush persistent Transaction to trigger update
 			session.flush();
 
+			// Update-generated data has been synchronized
 			assertThat( transaction.getUpdatedAt() ).isAfter( LocalDateTime.now().minusSeconds( 10 ) );
 			assertThat( transaction.getAmount() ).isEqualByComparingTo( BigDecimal.ZERO );
 		} );

@@ -22,10 +22,13 @@ import java.util.List;
 
 import static org.hibernate.query.restriction.Restriction.restrict;
 
-/* The QuerySpecification API is considered incubating
-The idea is similar in concept to criteria queries, but focused on ease-of-use and less verbosity.
-Generally the JPA static metamodel is a convenient and type-safe way to help build these sorting and restriction references.
-( with gradle add :  testAnnotationProcessor "org.hibernate:hibernate-jpamodelgen:${hibernateVersion})
+/**
+ *  The QuerySpecification API is considered incubating.
+ *  The idea is similar in concept to criteria queries,
+ *  but focused on ease-of-use and less verbosity.
+ *  Generally, the JPA static metamodel is a convenient and
+ *  type-safe way to help build these sorting and restriction references.
+ *  ( with gradle add :  testAnnotationProcessor "org.hibernate:hibernate-jpamodelgen:${hibernateVersion} )
  */
 @DomainModel(
 		annotatedClasses = {

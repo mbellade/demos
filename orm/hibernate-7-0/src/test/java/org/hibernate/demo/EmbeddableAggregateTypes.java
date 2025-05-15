@@ -15,20 +15,26 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-/*
-  Hibernate embeddables are value types (does not have an identity) that do not directly correspond to database tables
-  but are instead used within entities to group multiple basic type mappings
-  and reuse them across several entities.
-
-  There's a couple of alternative ways to represent an embeddable type on the database side.
-
-  as UDTs for dbms supporting user define types
-  	Just annotate the embeddable, or the attribute which holds a reference to it, with the new `@Struct` annotation
-
-  as JSON
-  	we must annotate the attribute `@JdbcTypeCode(SqlTypes.JSON)`, instead of annotating the embeddable type.
- 	We also need to add Jackson or an implementation of JSONB
- 	runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:{jacksonVersion}'
+/**
+ * Hibernate embeddables are value types (does not have an identity)
+ * that do not directly correspond to database tables
+ * but are instead used within entities to group multiple
+ * basic type mappings and reuse them across several entities.
+ * <p>
+ * There's a couple of alternative ways to represent an embeddable
+ * type on the database side.
+ * <ul>
+ *     <li>
+ *         UDTs for dbms supporting user define types: just annotate
+ *         the embeddable, or the attribute which holds a reference
+ *         to it, with the new {@code @Struct} annotation;
+ *     </li>
+ *     <li>
+ *         as JSON: annotate the attribute {@code @JdbcTypeCode(SqlTypes.JSON)},
+ *         instead of annotating the embeddable type. A JSON object mapper
+ *         like Jackson must also be available on the classpath.
+ *     </li>
+ * </ul>
  */
 @DomainModel(
 		annotatedClasses = {
@@ -76,14 +82,22 @@ public class EmbeddableAggregateTypes {
 		}
 	}
 
-	@Embeddable
 	/**
 	 * Specifies the UDT (user defined type) name for the annotated embeddable.
 	 * 	This results in the following UDT:
-	 * 		create type PersonName as (firstName varchar(255), middleName varchar(255), lastName varchar(255))
+	 * 	<pre>
+	 * 	{@code
+	 * 	create type PersonName as (
+	 * 		firstName varchar(255),
+	 * 		middleName varchar(255),
+	 * 		lastName varchar(255)
+	 * 	)
+	 * 	}
+	 * 	</pre>
 	 * 	And the `name` column of the `Author` table will have the type `PersonName`.
 	 */
 	@Struct(name = "PersonName")
-	record Name(String firstName, String middleName, String lastName) {
+	@Embeddable
+	public record Name(String firstName, String middleName, String lastName) {
 	}
 }

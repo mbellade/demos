@@ -29,6 +29,7 @@ import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.injector.DefaultContentInjector;
+import io.quarkiverse.mcp.server.Tool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.metamodel.Metamodel;
@@ -72,10 +73,9 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	Metamodel metamodel;
 
 	private final SystemMessage metamodelPrompt;
-	//	private final ChatMemory chatMemory;
-//	private final JpaMetamodel metamodel;
 	private final boolean structuredJson;
 
+	@SuppressWarnings("CdiInjectionPointsInspection")
 	public HibernateAssistantLC4J(ChatLanguageModel chatModel, ChatMemoryProvider memoryProvider, Metamodel metamodel) {
 		this.chatModel = chatModel;
 		this.chatMemory = memoryProvider.get( "hibernate-assistant-lc4j" );
@@ -199,7 +199,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 */
 	@Override
 	public String executeQuery(SelectionQuery<?> query, SharedSessionContract session) {
-		final String result = executeQueryToString( query, session );
+		final String result = executeQueryToJson( query, session );
 
 		final String prompt = "The query returned the following data (in JSON format):\n" + result +
 				// this seems to be needed, otherwise with some models we just get an HQL query
@@ -236,7 +236,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 *
 	 * @return a natural language response based on the results of the query
 	 */
-	public <T> String executeQueryToString(SelectionQuery<T> query, SharedSessionContract session) {
+	public <T> String executeQueryToJson(SelectionQuery<T> query, SharedSessionContract session) {
 		final List<? extends T> resultList = query.getResultList();
 		if ( resultList.isEmpty() ) {
 			return "The query did not return any results.";

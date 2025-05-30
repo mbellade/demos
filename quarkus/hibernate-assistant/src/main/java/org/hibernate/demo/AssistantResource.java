@@ -34,7 +34,7 @@ public class AssistantResource {
 					query,
 					session
 			);
-			final String json = assistant.executeQueryToString( select, session );
+			final String json = assistant.executeQueryToJson( select, session );
 			assistant.clear();
 			return Response.ok( json ).build();
 		}

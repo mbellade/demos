@@ -11,5 +11,6 @@
   <modules>
     <module>orm/hibernate-6-4</module>
     <module>orm/hibernate-7-0</module>
+    <module>quarkus/hibernate-assistant</module>
   </modules>
 </project>

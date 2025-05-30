@@ -1,0 +1,65 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.domain;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "company_table")
+public class Company implements Serializable {
+	@Id
+	private long id;
+
+	@Column(nullable = false)
+	private String name;
+
+	@Embedded
+	private Address address;
+
+	@OneToMany(mappedBy="company")
+	private List<Employee> employees;
+
+	public Company() {
+	}
+
+	public Company(long id, String name, Address address) {
+		this.id = id;
+		this.name = name;
+		this.address = address;
+		this.employees = new ArrayList<>();
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Address getAddress() {
+		return address;
+	}
+
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+}

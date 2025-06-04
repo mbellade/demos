@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hibernate Assistant Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #333639;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e8e8e8;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: none;
+            background-color: transparent;
+            position: relative;
+        }
+        .header {
+            padding: 15px;
+            background-color: #333639;
+            color: white;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 3px solid #BCAE79;
+        }
+        .header img {
+            height: 40px;
+            margin-right: 15px;
+        }
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 90px;
+            background-color: transparent;
+        }
+        .input-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 1160px;
+            display: flex;
+            background-color: #444750;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 5px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            background-color: transparent;
+            color: #e8e8e8;
+            outline: none;
+        }
+        #message-input::placeholder {
+            color: #aaa;
+        }
+        .button-group {
+            display: flex;
+            padding-right: 10px;
+            align-items: center;
+        }
+        .btn {
+            width: 38px;
+            height: 38px;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #ask-button {
+            background-color: #59666C;
+        }
+        #ask-button:hover {
+            background-color: #4a575c;
+        }
+        #data-button {
+            background-color: #BCAE79;
+            color: #333;
+        }
+        #data-button:hover {
+            background-color: #a89c69;
+        }
+        .btn i {
+            font-size: 18px;
+        }
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #aaaaaa;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+        }
+        .clear-btn:hover {
+            color: #e8e8e8;
+        }
+        .clear-btn i {
+            font-size: 18px;
+        }
+        .message {
+            margin-bottom: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #4e5c64;
+            margin-left: auto;
+            border-radius: 18px;
+            border-bottom-right-radius: 4px;
+            color: #fff;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .assistant-message {
+            margin-right: auto;
+            color: #e8e8e8;
+            padding: 0 0 0 15px;
+            border-left: 3px solid #59666C;
+        }
+        .data-message {
+            margin-right: auto;
+            color: #e8e8e8;
+            padding: 0 0 0 15px;
+            border-left: 3px solid #BCAE79;
+            max-width: 90%;
+        }
+        .loading-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            transition: opacity 0.5s ease-out;
+            position: relative;
+        }
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(188,174,121,0.2);
+            border-radius: 50%;
+            border-top-color: #BCAE79;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        pre {
+            background-color: #2a2d30;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            color: #e8e8e8;
+            border-left: 2px solid #BCAE79;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 14px;
+            background-color: #2a2d30;
+        }
+        table th {
+            background-color: #59666C;
+            color: white;
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #444;
+        }
+        table td {
+            padding: 8px;
+            border: 1px solid #444;
+            color: #e8e8e8;
+        }
+        table tr:nth-child(even) {
+            background-color: #333639;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        .expandable-json {
+            cursor: pointer;
+            color: #BCAE79;
+            text-decoration: underline;
+            font-style: italic;
+        }
+        .nested-table {
+            margin-top: 8px;
+            margin-left: 15px;
+            border-left: 2px solid #BCAE79;
+        }
+        .expand-collapse-btn {
+            background: none;
+            border: none;
+            color: #BCAE79;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 5px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="/img/hibernate_icon.svg" alt="Hibernate Logo">
+        <h1>Hibernate Assistant</h1>
+    </div>
+    <div class="chat-container" id="chat-container">
+        <div class="message assistant-message">
+            Hello! I'm your Hibernate Assistant. Ask me anything about data.
+        </div>
+    </div>
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Ask a question about your data..."
+               autocomplete="off" autofocus>
+        <div class="button-group">
+            <button id="ask-button" class="btn" title="Ask a question">
+                <i class="fas fa-comment"></i>
+            </button>
+            <button id="data-button" class="btn" title="Get data">
+                <i class="fas fa-table"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const askButton = document.getElementById('ask-button');
+        const dataButton = document.getElementById('data-button');
+
+        // Add clear button to the top of the chat container
+        const clearButton = document.createElement('button');
+        clearButton.id = 'clear-button';
+        clearButton.className = 'clear-btn';
+        clearButton.innerHTML = '<i class="fas fa-trash"></i>';
+        clearButton.style.display = 'none'; // Initially hidden
+
+        function updateClearButtonVisibility() {
+            if (chatContainer.childElementCount > 2) {
+                clearButton.style.display = 'flex';
+                chatContainer.appendChild(clearButton);
+            } else {
+                clearButton.style.display = 'none';
+            }
+        }
+
+        // Function to add a message to the chat
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
+
+            // Basic Markdown-like formatting for code blocks
+            messageDiv.innerHTML = text.replace( /```([\s\S]*?)```/g, '<pre>$1</pre>' );
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            updateClearButtonVisibility();
+        }
+
+        // Convert a string to a JSON object if possible
+        function asJonObject(str) {
+            try {
+                const json = JSON.parse(str);
+                return typeof json === 'object' && json;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Function to create expandable JSON cells
+        function createExpandableJson(value, parentElement) {
+            if (typeof value === 'object' && value !== null) {
+                const expandBtn = document.createElement('button');
+                expandBtn.className = 'expand-collapse-btn';
+                expandBtn.textContent = '+';
+
+                const jsonPreview = document.createElement('span');
+                jsonPreview.textContent = Array.isArray(value) ?
+                    `Array[${value.length}]` :
+                    `Object{${Object.keys(value).length} properties}`;
+                jsonPreview.className = 'expandable-json';
+
+                const container = document.createElement('div');
+                container.appendChild(expandBtn);
+                container.appendChild(jsonPreview);
+
+                const nestedContainer = document.createElement('div');
+                nestedContainer.className = 'nested-table';
+                nestedContainer.style.display = 'none';
+
+                if (Array.isArray(value)) {
+                    createArrayTable(value, nestedContainer);
+                } else {
+                    createObjectTable(value, nestedContainer);
+                }
+
+                container.appendChild(nestedContainer);
+                parentElement.appendChild(container);
+
+                expandBtn.addEventListener('click', function() {
+                    if (nestedContainer.style.display === 'none') {
+                        nestedContainer.style.display = 'block';
+                        expandBtn.textContent = '-';
+                    } else {
+                        nestedContainer.style.display = 'none';
+                        expandBtn.textContent = '+';
+                    }
+                });
+            } else {
+                let jsonValue;
+                if (typeof value === 'string' && ((jsonValue = asJonObject(value)) !== null)) {
+                    try {
+                        createExpandableJson(jsonValue, parentElement);
+                    } catch (e) {
+                        parentElement.textContent = String(value);
+                    }
+                } else {
+                    parentElement.textContent = value !== null ? value && String(value) || '' : 'null';
+                }
+            }
+        }
+
+        // Function to create a table for an array
+        function createArrayTable(arr, container) {
+            if (arr.length === 0) {
+                // This shouldn't happen
+                const emptyMsg = document.createElement('div');
+                emptyMsg.textContent = '[empty array]';
+                emptyMsg.style.fontStyle = 'italic';
+                emptyMsg.style.color = '#aaa';
+                container.appendChild(emptyMsg);
+                return;
+            }
+
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'table-container';
+
+            const table = document.createElement('table');
+
+            // Determine if we need a complex table or a simple list
+            let isComplexArray = false;
+            for (const item of arr) {
+                if (typeof item === 'object' && item !== null) {
+                    isComplexArray = true;
+                    break;
+                }
+            }
+
+            if (isComplexArray) {
+                // Create header with all possible keys
+                const keys = new Set();
+                arr.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        Object.keys(item).forEach(key => keys.add(key));
+                    }
+                });
+
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+
+                keys.forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = capitalize(key);
+                    headerRow.appendChild(th);
+                });
+
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                // Create table body
+                const tbody = document.createElement('tbody');
+
+                arr.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        const row = document.createElement('tr');
+
+                        keys.forEach(key => {
+                            const td = document.createElement('td');
+                            const value = item[key];
+                            createExpandableJson(value, td);
+                            row.appendChild(td);
+                        });
+
+                        tbody.appendChild(row);
+                    }
+                });
+
+                table.appendChild(tbody);
+            } else {
+                // Simple list for primitive values
+                const tbody = document.createElement('tbody');
+
+                arr.forEach((item, index) => {
+                    const row = document.createElement('tr');
+
+                    const indexCell = document.createElement('td');
+                    indexCell.textContent = index;
+                    indexCell.style.width = '50px';
+                    row.appendChild(indexCell);
+
+                    const valueCell = document.createElement('td');
+                    valueCell.textContent = item !== null ? String(item) : 'null';
+                    row.appendChild(valueCell);
+
+                    tbody.appendChild(row);
+                });
+
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+
+                const indexHeader = document.createElement('th');
+                indexHeader.textContent = 'Index';
+                headerRow.appendChild(indexHeader);
+
+                const valueHeader = document.createElement('th');
+                valueHeader.textContent = 'Value';
+                headerRow.appendChild(valueHeader);
+
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                table.appendChild(tbody);
+            }
+
+            tableContainer.appendChild(table);
+            container.appendChild(tableContainer);
+        }
+
+        // Function to create a table for an object
+        function createObjectTable(obj, container) {
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'table-container';
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+
+            const keyHeader = document.createElement('th');
+            keyHeader.textContent = 'Property';
+            headerRow.appendChild(keyHeader);
+
+            const valueHeader = document.createElement('th');
+            valueHeader.textContent = 'Value';
+            headerRow.appendChild(valueHeader);
+
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+
+            Object.entries(obj).forEach(([key, value]) => {
+                const row = document.createElement('tr');
+
+                const keyCell = document.createElement('td');
+                keyCell.textContent = key;
+                keyCell.style.width = '30%';
+                row.appendChild(keyCell);
+
+                const valueCell = document.createElement('td');
+                createExpandableJson(value, valueCell);
+                row.appendChild(valueCell);
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            container.appendChild(tableContainer);
+        }
+
+        // Function to add JSON data as a table
+        function addDataMessage(jsonData) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message data-message';
+
+            try {
+                const data = JSON.parse(jsonData);
+
+                if (Array.isArray(data)) {
+                    const container = document.createElement('div');
+                    createArrayTable(data, container);
+                    messageDiv.appendChild(container);
+                } else if (typeof data === 'object' && data !== null) {
+                    const container = document.createElement('div');
+                    createObjectTable(data, container);
+                    messageDiv.appendChild(container);
+                } else {
+                    // Not an array or object
+                    messageDiv.textContent = jsonData;
+                }
+            } catch (e) {
+                // If parsing fails, just show the raw response
+                messageDiv.textContent = jsonData;
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            updateClearButtonVisibility();
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-container';
+            loadingDiv.id = 'loading-message';
+            loadingDiv.innerHTML = '<div class="loading"></div>';
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                // Set position to absolute so it doesn't affect layout flow
+                loadingMessage.style.position = 'absolute';
+                loadingMessage.style.transition = 'opacity 0.5s';
+                loadingMessage.style.opacity = '0';
+
+                // Remove completely after animation
+                setTimeout(() => {
+                    loadingMessage.remove();
+                }, 500);
+            }
+        }
+
+        function capitalize(str) {
+            var splitStr = str.toLowerCase().split(' ');
+            for (var i = 0; i < splitStr.length; i++) {
+                splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].slice(1);
+            }
+            return splitStr.join(' ');
+        }
+
+        // Function to send a message to the Ask API
+        async function sendAskMessage(message) {
+            if (message.trim() === '') return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+            showLoading();
+
+            try {
+                const response = await fetch(`/assistant/ask?query=${encodeURIComponent(message)}`);
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.text();
+                hideLoading();
+                addMessage(data, false);
+
+            } catch (error) {
+                hideLoading();
+                addMessage(`Sorry, there was an error processing your request: ${error.message}`, false);
+                console.error('Error:', error);
+            }
+        }
+
+        // Function to send a message to the JSON API
+        async function sendDataMessage(message) {
+            if (message.trim() === '') return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+            showLoading();
+
+            try {
+                const response = await fetch(`/assistant/json?query=${encodeURIComponent(message)}`);
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.text();
+                hideLoading();
+                addDataMessage(data);
+
+            } catch (error) {
+                hideLoading();
+                addMessage(`Sorry, there was an error processing your request: ${error.message}`, false);
+                console.error('Error:', error);
+            }
+        }
+
+        async function clearChat() {
+            try {
+                const response = await fetch('/assistant/clear');
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+
+                // Keep only the initial greeting
+                while (chatContainer.childElementCount > 1) {
+                    const lastChild = chatContainer.lastChild;
+                    chatContainer.removeChild(lastChild);
+                }
+
+                updateClearButtonVisibility();
+            } catch (error) {
+                console.error('Error clearing chat:', error);
+            }
+        }
+
+        // Event listeners
+        askButton.addEventListener('click', () => {
+            sendAskMessage(messageInput.value);
+        });
+
+        dataButton.addEventListener('click', () => {
+            sendDataMessage(messageInput.value);
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                // Default to "Ask" when pressing Enter
+                sendAskMessage(messageInput.value);
+            }
+        });
+
+        clearButton.addEventListener('click', clearChat);
+
+        updateClearButtonVisibility();
+    });
+</script>
+</body>
+</html>

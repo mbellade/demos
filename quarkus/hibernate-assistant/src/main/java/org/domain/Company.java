@@ -26,7 +26,7 @@ public class Company implements Serializable {
 	@Embedded
 	private Address address;
 
-	@OneToMany(mappedBy="company")
+	@OneToMany(mappedBy = "company")
 	private List<Employee> employees;
 
 	public Company() {

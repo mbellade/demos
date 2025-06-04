@@ -9,11 +9,12 @@ import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 /**
  * Hibernate Assistant MCP Server implementation.
  */
-@ApplicationScoped
+@Singleton
 public class HibernateAssistantMCP {
 	@Inject
 	Session session;
@@ -44,7 +45,7 @@ public class HibernateAssistantMCP {
 	 */
 	@Tool(name = "hibernate_query_json", description = "Execute a query against the database using the Hibernate Assistant. " +
 			"Pass a natural language message and get a JSON representation of the resulting data.")
-	public String executeQueryToJson(@ToolArg(description = "Natural language query to execute")String message) {
+	public String executeQueryToJson(@ToolArg(description = "Natural language query to execute") String message) {
 		final SelectionQuery<?> query = assistant.createAiQuery( message, session );
 		return assistant.executeQueryToJson( query, session );
 	}

@@ -4,6 +4,8 @@ import org.hibernate.Session;
 import org.hibernate.demo.assistant.HibernateAssistantLC4J;
 import org.hibernate.query.SelectionQuery;
 
+import org.jboss.logging.Logger;
+
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -15,6 +17,8 @@ import java.util.Objects;
 
 @Path("/assistant")
 public class AssistantResource {
+	private static final Logger LOG = Logger.getLogger( AssistantResource.class);
+
 	@Inject
 	Session session;
 
@@ -28,6 +32,8 @@ public class AssistantResource {
 	@Path("/json")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response queryToJson(@QueryParam("query") String query) {
+		LOG.debugf( "Query: %s", query );
+
 		try {
 			Objects.requireNonNull( query, "Query parameter must not be null" );
 			final SelectionQuery<?> select = assistant.createAiQuery(
@@ -35,10 +41,13 @@ public class AssistantResource {
 					session
 			);
 			final String json = assistant.executeQueryToJson( select, session );
-			assistant.clear();
+
+			LOG.debugf( "Assistant response: %s", json );
+
 			return Response.ok( json ).build();
 		}
 		catch (Exception e) {
+			LOG.errorf( e, "Error executing query: %s", e.getMessage() );
 			return Response.status( Response.Status.INTERNAL_SERVER_ERROR )
 					.entity( "Error executing query: " + e.getMessage() ).build();
 		}
@@ -51,15 +60,29 @@ public class AssistantResource {
 	@Path("/ask")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response naturalLanguage(@QueryParam("query") String query) {
+		LOG.debugf( "Ask: %s", query );
+
 		try {
 			Objects.requireNonNull( query, "Query parameter must not be null" );
 			final String json = assistant.executeQuery( query, session );
-			assistant.clear();
+
+			LOG.debugf( "Assistant response: %s", json );
+
 			return Response.ok( json ).build();
 		}
 		catch (Exception e) {
+			LOG.errorf( e, "Error executing query: %s", e.getMessage() );
 			return Response.status( Response.Status.INTERNAL_SERVER_ERROR )
 					.entity( "Error executing query: " + e.getMessage() ).build();
 		}
+	}
+
+	@GET
+	@Path("/clear")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response clear() {
+		LOG.debugf( "Clearing assistant context" );
+		assistant.clear();
+		return Response.ok( "Assistant context cleared" ).build();
 	}
 }

@@ -29,7 +29,6 @@ import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.injector.DefaultContentInjector;
-import io.quarkiverse.mcp.server.Tool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.metamodel.Metamodel;
@@ -238,10 +237,6 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 */
 	public <T> String executeQueryToJson(SelectionQuery<T> query, SharedSessionContract session) {
 		final List<? extends T> resultList = query.getResultList();
-		if ( resultList.isEmpty() ) {
-			return "The query did not return any results.";
-		}
-
 		return new ResultsJsonSerializerImpl( (SessionFactoryImplementor) session.getFactory() ).toString(
 				resultList,
 				query

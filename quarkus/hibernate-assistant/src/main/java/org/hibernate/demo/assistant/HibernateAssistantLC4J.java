@@ -32,6 +32,8 @@ import dev.langchain4j.rag.content.injector.DefaultContentInjector;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.metamodel.Metamodel;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,13 +83,13 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		this.metamodel = metamodel;
 		this.structuredJson = true; // default to true as Ollama supports it
 
-		this.metamodelPrompt = getMetamodelPrompt( METAMODEL_PROMPT_TEMPLATE, metamodel );
+		this.metamodelPrompt = getMetamodelPrompt( metamodel );
 		log.debugf( "Metamodel prompt: %s", metamodelPrompt.text() );
 		chatMemory.add( metamodelPrompt );
 	}
 
-	private static SystemMessage getMetamodelPrompt(PromptTemplate metamodelPromptTemplate, Metamodel metamodel) {
-		return metamodelPromptTemplate.apply( MetamodelJsonSerializerImpl.INSTANCE.toString( metamodel ) )
+	private static SystemMessage getMetamodelPrompt(Metamodel metamodel) {
+		return HibernateAssistantLC4J.METAMODEL_PROMPT_TEMPLATE.apply( MetamodelJsonSerializerImpl.INSTANCE.toString( metamodel ) )
 				.toSystemMessage();
 	}
 
@@ -198,7 +200,13 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 */
 	@Override
 	public String executeQuery(SelectionQuery<?> query, SharedSessionContract session) {
-		final String result = executeQueryToJson( query, session );
+		final String result;
+		try {
+			result = executeQueryToJson( query, session );
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException( e );
+		}
 
 		final String prompt = "The query returned the following data (in JSON format):\n" + result +
 				// this seems to be needed, otherwise with some models we just get an HQL query
@@ -235,7 +243,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 *
 	 * @return a natural language response based on the results of the query
 	 */
-	public <T> String executeQueryToJson(SelectionQuery<T> query, SharedSessionContract session) {
+	public <T> String executeQueryToJson(SelectionQuery<T> query, SharedSessionContract session) throws IOException {
 		final List<? extends T> resultList = query.getResultList();
 		return new ResultsJsonSerializerImpl( (SessionFactoryImplementor) session.getFactory() ).toString(
 				resultList,

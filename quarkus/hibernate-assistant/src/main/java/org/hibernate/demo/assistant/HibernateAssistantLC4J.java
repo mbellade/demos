@@ -19,7 +19,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
@@ -43,11 +43,11 @@ import static org.hibernate.demo.assistant.HibernateContentRetriever.INJECTOR_PR
 
 /**
  * Implementation of {@link HibernateAssistant} based on <a href="https://docs.langchain4j.dev/">LangChain4j</a> APIs.
- * The user must provide a {@link ChatLanguageModel} instance that will be used to interact with the LLMs.
+ * The user must provide a {@link ChatModel} instance that will be used to interact with the LLMs.
  * Optionally, a {@link ChatMemory} can also be provided, otherwise a default {@link MessageWindowChatMemory}
  * with a maximum of {@code 10} messages will be used.
  * <p>
- * It is highly recommended to use a {@link ChatLanguageModel} that supports
+ * It is highly recommended to use a {@link ChatModel} that supports
  * <a href="https://docs.langchain4j.dev/tutorials/structured-outputs#json-schema">JSON Schema</a>
  * to improve the chances of extracting a valid HQL query from the LLM's responses. Note that this requires
  * enabling <a href="https://docs.langchain4j.dev/tutorials/structured-outputs#json-schema">JSON Schema</a>
@@ -69,7 +69,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 					Do not output anything else aside from a valid HQL statement!
 					""" );
 
-	ChatLanguageModel chatModel;
+	ChatModel chatModel;
 	ChatMemory chatMemory;
 	Metamodel metamodel;
 
@@ -77,7 +77,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	private final boolean structuredJson;
 
 	@SuppressWarnings("CdiInjectionPointsInspection")
-	public HibernateAssistantLC4J(ChatLanguageModel chatModel, ChatMemoryProvider memoryProvider, Metamodel metamodel) {
+	public HibernateAssistantLC4J(ChatModel chatModel, ChatMemoryProvider memoryProvider, Metamodel metamodel) {
 		this.chatModel = chatModel;
 		this.chatMemory = memoryProvider.get( "hibernate-assistant-lc4j" );
 		this.metamodel = metamodel;
@@ -89,7 +89,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	}
 
 	private static SystemMessage getMetamodelPrompt(Metamodel metamodel) {
-		return HibernateAssistantLC4J.METAMODEL_PROMPT_TEMPLATE.apply( MetamodelJsonSerializerImpl.INSTANCE.toString( metamodel ) )
+		return METAMODEL_PROMPT_TEMPLATE.apply( MetamodelJsonSerializerImpl.INSTANCE.toString( metamodel ) )
 				.toSystemMessage();
 	}
 
@@ -183,7 +183,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 				.contentInjector( DefaultContentInjector.builder().promptTemplate( INJECTOR_PROMPT_TEMPLATE ).build() )
 				.build();
 		final ConversationalRetrievalChain chain = ConversationalRetrievalChain.builder()
-				.chatLanguageModel( chatModel )
+				.chatModel( chatModel )
 				.chatMemory( chatMemory )
 				.retrievalAugmentor( rag )
 				.build();
@@ -210,8 +210,8 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 
 		final String prompt = "The query returned the following data (in JSON format):\n" + result +
 				// this seems to be needed, otherwise with some models we just get an HQL query
-				"\nAnswer the original question in natural language using the data above and do not create a query" +
-				" or suggest further steps to take!";
+				"\nBased on the data above, answer the original question in plain natural language. " +
+				"Do not create a query or suggest further steps to take!";
 
 		log.debugf( "Query result prompt: %s", prompt );
 
@@ -231,7 +231,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 * a string representation of the response. The string will be created based on Hibernate's
 	 * knowledge of the domain model, but it will not print the entire object tree since that
 	 * would cause circularity problems. This is a best-effort attempt at providing a useful
-	 * string-representation based on data, mainly used to pass it back to a {@link ChatLanguageModel}
+	 * string-representation based on data, mainly used to pass it back to a {@link ChatModel}
 	 * like in {@link #executeQuery(SelectionQuery, SharedSessionContract)}.
 	 * <p>
 	 * If you wish to execute the query manually and obtain the structured results yourself,
@@ -251,15 +251,18 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		);
 	}
 
+	/**
+	 * Simple holder used for HQL extraction when using structured JSON responses.
+	 */
 	record HqlHolder(String hqlQuery) {
 	}
 
 	private static ResponseFormat hqlResponseFormat() {
 		return ResponseFormat.builder().type( JSON ) // type can be either TEXT (default) or JSON
-				.jsonSchema( JsonSchema.builder().name( "HQL" ) // OpenAI requires specifying the name for the schema
-									 .rootElement( JsonObjectSchema.builder() // see [1] below
+				.jsonSchema( JsonSchema.builder().name( "HQL" )
+									 .rootElement( JsonObjectSchema.builder()
 														   .addStringProperty( "hqlQuery" )
-														   .required( "hqlQuery" ) // see [2] below
+														   .required( "hqlQuery" )
 														   .build() ).build() ).build();
 	}
 }

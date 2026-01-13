@@ -1,5 +1,7 @@
 package org.hibernate.demo.assistant;
 
+import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.query.SelectionQuery;
 
@@ -9,14 +11,13 @@ import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.query.Query;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import java.util.List;
 
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.hibernate.demo.assistant.HibernateAssistantLC4J.extractHql;
 
 @Singleton
 public class HibernateContentRetriever implements ContentRetriever {
@@ -34,10 +35,13 @@ public class HibernateContentRetriever implements ContentRetriever {
 	 */
 	public static final PromptTemplate INJECTOR_PROMPT_TEMPLATE = PromptTemplate.from(
 			"""
-					The query returned the following data (in JSON format):
+					Answer the original question:
+					{{userMessage}}
+					
+					Based strictly on the following data information:
 					{{contents}}
 					
-					Answer the question based on the data above using natural language."""
+					Do not create an HQL query, nor suggest any further steps to take, just answer the original question in natural language."""
 	);
 
 	public HibernateContentRetriever(HibernateAssistantLC4J assistant) {
@@ -48,8 +52,18 @@ public class HibernateContentRetriever implements ContentRetriever {
 	public List<Content> retrieve(Query naturalLanguageQuery) {
 		final String result;
 		try {
-			final SelectionQuery<?> aiQuery = assistant.createAiQuery( naturalLanguageQuery.text(), session );
-			result = assistant.executeQueryToJson( aiQuery, session );
+			final String response = assistant.queryPrompt( naturalLanguageQuery.text(), session, null );
+			final String hql = extractHql( response );
+			if ( hql != null ) {
+				log.debugf( "Extracted HQL: %s", hql );
+				final SelectionQuery<Object> aiQuery = session.createSelectionQuery( hql, Object.class );
+				result = assistant.executeQueryToJson( aiQuery, session );
+			}
+			else {
+				log.debugf( "No HQL extracted from model response" );
+				result = response;
+			}
+
 		}
 		catch (Exception e) {
 			log.errorf( e, "Error executing query: ", e.getMessage() );

@@ -6,6 +6,7 @@ import org.hibernate.query.SelectionQuery;
 
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.data.message.UserMessage;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -44,6 +45,8 @@ public class AssistantResource {
 
 			LOG.debugf( "Assistant response: %s", json );
 
+			assistant.getChatMemory().add( UserMessage.from( "The query returned the following data (in JSON format):\n" + json ) );
+
 			return Response.ok( json ).build();
 		}
 		catch (Exception e) {
@@ -64,11 +67,11 @@ public class AssistantResource {
 
 		try {
 			Objects.requireNonNull( query, "Query parameter must not be null" );
-			final String json = assistant.executeQuery( query, session );
+			final String response = assistant.executeQuery( query, session );
 
-			LOG.debugf( "Assistant response: %s", json );
+			LOG.debugf( "Assistant response: %s", response );
 
-			return Response.ok( json ).build();
+			return Response.ok( response ).build();
 		}
 		catch (Exception e) {
 			LOG.errorf( e, "Error executing query: %s", e.getMessage() );

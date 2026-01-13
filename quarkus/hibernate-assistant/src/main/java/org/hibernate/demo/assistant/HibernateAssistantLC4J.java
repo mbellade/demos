@@ -1,5 +1,11 @@
 package org.hibernate.demo.assistant;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -13,12 +19,10 @@ import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.langchain4j.chain.ConversationalRetrievalChain;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -29,23 +33,20 @@ import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.injector.DefaultContentInjector;
+import dev.langchain4j.service.AiServices;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.metamodel.Metamodel;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
 import static org.hibernate.demo.assistant.HibernateContentRetriever.INJECTOR_PROMPT_TEMPLATE;
 
 /**
- * Implementation of {@link HibernateAssistant} based on <a href="https://docs.langchain4j.dev/">LangChain4j</a> APIs.
- * The user must provide a {@link ChatModel} instance that will be used to interact with the LLMs.
- * Optionally, a {@link ChatMemory} can also be provided, otherwise a default {@link MessageWindowChatMemory}
- * with a maximum of {@code 10} messages will be used.
+ * Implementation of {@link HibernateAssistant} based on <a href="https://docs.langchain4j.dev/">LangChain4j</a> APIs,
+ * designed to be available as a CDI bean within a Quarkus application.
+ * The CDI context must contain a {@link ChatModel} instance that will be used to interact with the LLMs.
+ * Also, a {@link ChatMemoryProvider} should be present as well to provide a {@link ChatMemory}
+ * instance to store the conversation history.
  * <p>
  * It is highly recommended to use a {@link ChatModel} that supports
  * <a href="https://docs.langchain4j.dev/tutorials/structured-outputs#json-schema">JSON Schema</a>
@@ -66,7 +67,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 					
 					If a user asks a question that can be answered by querying this model, generate an HQL SELECT query.
 					The query must not include any input parameters.
-					Do not output anything else aside from a valid HQL statement!
+					Do not output anything else aside from a valid HQL statement, no explanation, and do not put the query in backticks.
 					""" );
 
 	ChatModel chatModel;
@@ -76,8 +77,12 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	private final SystemMessage metamodelPrompt;
 	private final boolean structuredJson;
 
-	@SuppressWarnings("CdiInjectionPointsInspection")
-	public HibernateAssistantLC4J(ChatModel chatModel, ChatMemoryProvider memoryProvider, Metamodel metamodel) {
+	public HibernateAssistantLC4J(
+			// Injected ChatModel and ChatMemoryProvider from the Quarkus LC4J extension
+			ChatModel chatModel,
+			ChatMemoryProvider memoryProvider,
+			// Injected Metamodel from the Hibernate ORM extension
+			Metamodel metamodel) {
 		this.chatModel = chatModel;
 		this.chatMemory = memoryProvider.get( "hibernate-assistant-lc4j" );
 		this.metamodel = metamodel;
@@ -99,8 +104,11 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		this.chatMemory.add( metamodelPrompt );
 	}
 
-	@Override
-	public <T> SelectionQuery<T> createAiQuery(String message, SharedSessionContract session, Class<T> resultType) {
+	public ChatMemory getChatMemory() {
+		return chatMemory;
+	}
+
+	public <T> String queryPrompt(String message, SharedSessionContract session, Class<T> resultType) {
 		final ManagedDomainType<T> managedType = resultType != null && resultType != Object.class && !resultType.isInterface() ?
 				( (JpaMetamodel) metamodel ).findManagedType( resultType ) :
 				null;
@@ -116,39 +124,39 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 			requestBuilder.responseFormat( hqlResponseFormat() );
 		}
 
-		final ChatRequest chatRequest = requestBuilder.build();
+		final ChatRequest chatRequest = ChatRequest.builder().messages( chatMemory.messages() ).build();
 
 		final ChatResponse chatResponse = chatModel.chat( chatRequest );
 
-		final String hql = extractHql( chatResponse, structuredJson );
+		return chatResponse.aiMessage().text();
+	}
+
+	@Override
+	public <T> SelectionQuery<T> createAiQuery(String message, SharedSessionContract session, Class<T> resultType) {
+		final String response = queryPrompt( message, session, resultType );
+		final String hql = extractHql( response, structuredJson );
 
 		log.debugf( "Extracted HQL: %s", hql );
 
 		return session.createSelectionQuery( hql, resultType );
 	}
 
-	private static String extractHql(ChatResponse chatResponse, boolean structuredJson) {
-		final String response = chatResponse.aiMessage().text();
-
-		log.debugf( "Raw model response: %s", response );
-
+	public static String extractHql(String response, boolean structuredJson) {
+//		log.debugf( "Raw model response: %s", response );
 		if ( structuredJson ) {
 			final HqlHolder hqlHolder;
 			try {
 				hqlHolder = new ObjectMapper().readValue( response, HqlHolder.class );
+				return hqlHolder.hql();
 			}
 			catch (JsonProcessingException e) {
-				throw new RuntimeException( e );
+				log.warn( "Failed to extract HQL from JSON format" );
 			}
-
-			return hqlHolder.hqlQuery();
 		}
-		else {
-			return extractHql( response );
-		}
+		return extractHql( response );
 	}
 
-	private static String extractHql(String response) {
+	static String extractHql(String response) {
 		// Try our best to extract valid HQL from text
 		final String regex = "(?i)\\bSELECT\\b.*?(?:;|\\n|$)";
 		final Pattern pattern = Pattern.compile( regex );
@@ -176,20 +184,23 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 *
 	 * @return a natural language response based on the results of the query
 	 */
-	@Override
-	public String executeQuery(String message, SharedSessionContract session) {
-		final RetrievalAugmentor rag = DefaultRetrievalAugmentor.builder()
-				.contentRetriever( contentRetriever )
-				.contentInjector( DefaultContentInjector.builder().promptTemplate( INJECTOR_PROMPT_TEMPLATE ).build() )
-				.build();
-		final ConversationalRetrievalChain chain = ConversationalRetrievalChain.builder()
-				.chatModel( chatModel )
-				.chatMemory( chatMemory )
-				.retrievalAugmentor( rag )
-				.build();
+@Override
+public String executeQuery(String message, SharedSessionContract session) {
+	final RetrievalAugmentor rag = DefaultRetrievalAugmentor.builder()
+			.contentRetriever( contentRetriever )
+			.contentInjector( DefaultContentInjector.builder().promptTemplate( INJECTOR_PROMPT_TEMPLATE ).build() )
+			.build();
+	final HibernateAssistantRag assistant = AiServices.builder( HibernateAssistantRag.class )
+			.chatModel( chatModel )
+			.chatMemoryProvider( memoryId -> chatMemory ) // force using existing memory with system message
+			.retrievalAugmentor( rag )
+			.build();
+	return assistant.chat(  message );
+}
 
-		return chain.execute( message );
-	}
+interface HibernateAssistantRag {
+	String chat(String userMessage);
+}
 
 	/**
 	 * {@inheritDoc}
@@ -245,16 +256,13 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 */
 	public <T> String executeQueryToJson(SelectionQuery<T> query, SharedSessionContract session) throws IOException {
 		final List<? extends T> resultList = query.getResultList();
-		return new ResultsJsonSerializerImpl( (SessionFactoryImplementor) session.getFactory() ).toString(
-				resultList,
-				query
-		);
+		return new ResultsJsonSerializerImpl( (SessionFactoryImplementor) session.getFactory() ).toString( resultList, query );
 	}
 
 	/**
 	 * Simple holder used for HQL extraction when using structured JSON responses.
 	 */
-	record HqlHolder(String hqlQuery) {
+	record HqlHolder(String hql) {
 	}
 
 	private static ResponseFormat hqlResponseFormat() {

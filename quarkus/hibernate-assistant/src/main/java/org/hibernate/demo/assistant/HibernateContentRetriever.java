@@ -2,7 +2,7 @@ package org.hibernate.demo.assistant;
 
 import java.util.List;
 
-import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.query.SelectionQuery;
 
 import org.jboss.logging.Logger;
@@ -27,7 +27,7 @@ public class HibernateContentRetriever implements ContentRetriever {
 	HibernateAssistantLC4J assistant;
 
 	@Inject
-	Session session;
+	StatelessSession session;
 
 	/**
 	 * Recommended default prompt template to use in conjuction with {@link HibernateContentRetriever},
@@ -38,7 +38,7 @@ public class HibernateContentRetriever implements ContentRetriever {
 					Answer the original question:
 					{{userMessage}}
 					
-					Based strictly on the following data information:
+					Based strictly on the following data:
 					{{contents}}
 					
 					Do not create an HQL query, nor suggest any further steps to take, just answer the original question in natural language."""

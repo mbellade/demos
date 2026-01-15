@@ -290,8 +290,20 @@ $(document).ready(function() {
             class: `message ${isUser ? 'user-message' : 'assistant-message'}`
         });
 
-        // Basic Markdown-like formatting for code blocks
-        $messageDiv.html(text.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>'));
+        // Basic Markdown-like formatting: Handle code blocks and respect newlines
+        const parts = text.split(/(```[\s\S]*?```)/g);
+        const formattedHtml = parts.map(part => {
+            if (part.startsWith('```') && part.endsWith('```')) {
+                // It is a code block: strip backticks and wrap in <pre>
+                // Newlines inside <pre> are preserved naturally
+                return '<pre>' + part.slice(3, -3) + '</pre>';
+            } else {
+                // It is regular text: replace newlines with <br>
+                return part.replace(/\n/g, '<br>');
+            }
+        }).join('');
+
+        $messageDiv.html(formattedHtml);
 
         $chatContainer.append($messageDiv);
         $chatContainer.scrollTop($chatContainer[0].scrollHeight);

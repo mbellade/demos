@@ -1,6 +1,8 @@
 package org.hibernate.demo;
 
-import org.hibernate.Session;
+import java.util.Objects;
+
+import org.hibernate.StatelessSession;
 import org.hibernate.demo.assistant.HibernateAssistantLC4J;
 import org.hibernate.query.SelectionQuery;
 
@@ -14,14 +16,13 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.Objects;
 
 @Path("/assistant")
 public class AssistantResource {
-	private static final Logger LOG = Logger.getLogger( AssistantResource.class);
+	private static final Logger LOG = Logger.getLogger( AssistantResource.class );
 
 	@Inject
-	Session session;
+	StatelessSession session;
 
 	@Inject
 	HibernateAssistantLC4J assistant;
@@ -45,7 +46,8 @@ public class AssistantResource {
 
 			LOG.debugf( "Assistant response: %s", json );
 
-			assistant.getChatMemory().add( UserMessage.from( "The query returned the following data (in JSON format):\n" + json ) );
+			assistant.getChatMemory()
+					.add( UserMessage.from( "The query returned the following data (in JSON format):\n" + json ) );
 
 			return Response.ok( json ).build();
 		}

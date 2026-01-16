@@ -67,7 +67,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 					
 					If a user asks a question that can be answered by querying this model, generate an HQL SELECT query.
 					The query must not include any input parameters.
-					Do not output anything else aside from a valid HQL statement, no explanation, and do not put the query in backticks.
+					Do not output anything else aside from a valid HQL statement, no explanation, and do not put the query in backticks or code blocks.
 					""" );
 
 	ChatModel chatModel;
@@ -184,23 +184,26 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	 *
 	 * @return a natural language response based on the results of the query
 	 */
-@Override
-public String executeQuery(String message, SharedSessionContract session) {
-	final RetrievalAugmentor rag = DefaultRetrievalAugmentor.builder()
-			.contentRetriever( contentRetriever )
-			.contentInjector( DefaultContentInjector.builder().promptTemplate( INJECTOR_PROMPT_TEMPLATE ).build() )
-			.build();
-	final HibernateAssistantRag assistant = AiServices.builder( HibernateAssistantRag.class )
-			.chatModel( chatModel )
-			.chatMemoryProvider( memoryId -> chatMemory ) // force using existing memory with system message
-			.retrievalAugmentor( rag )
-			.build();
-	return assistant.chat(  message );
-}
+	@Override
+	public String executeQuery(String message, SharedSessionContract session) {
+		final RetrievalAugmentor rag = DefaultRetrievalAugmentor.builder()
+				.contentRetriever( contentRetriever )
+				.contentInjector( DefaultContentInjector.builder()
+//										  .metadataKeysToInclude( List.of( "HQL" ) )
+										  .promptTemplate( INJECTOR_PROMPT_TEMPLATE )
+										  .build() )
+				.build();
+		final HibernateAssistantRag assistant = AiServices.builder( HibernateAssistantRag.class )
+				.chatModel( chatModel )
+				.chatMemoryProvider( memoryId -> chatMemory ) // force using existing memory with system message
+				.retrievalAugmentor( rag )
+				.build();
+		return assistant.chat( message );
+	}
 
-interface HibernateAssistantRag {
-	String chat(String userMessage);
-}
+	interface HibernateAssistantRag {
+		String chat(String userMessage);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -256,7 +259,10 @@ interface HibernateAssistantRag {
 	 */
 	public <T> String executeQueryToJson(SelectionQuery<T> query, SharedSessionContract session) throws IOException {
 		final List<? extends T> resultList = query.getResultList();
-		return new ResultsJsonSerializerImpl( (SessionFactoryImplementor) session.getFactory() ).toString( resultList, query );
+		return new ResultsJsonSerializerImpl( (SessionFactoryImplementor) session.getFactory() ).toString(
+				resultList,
+				query
+		);
 	}
 
 	/**

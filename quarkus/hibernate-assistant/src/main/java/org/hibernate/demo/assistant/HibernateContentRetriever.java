@@ -1,12 +1,15 @@
 package org.hibernate.demo.assistant;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.StatelessSession;
 import org.hibernate.query.SelectionQuery;
 
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
@@ -50,18 +53,19 @@ public class HibernateContentRetriever implements ContentRetriever {
 
 	@Override
 	public List<Content> retrieve(Query naturalLanguageQuery) {
-		final String result;
+		final TextSegment result;
 		try {
 			final String response = assistant.queryPrompt( naturalLanguageQuery.text(), session, null );
 			final String hql = extractHql( response );
 			if ( hql != null ) {
 				log.debugf( "Extracted HQL: %s", hql );
 				final SelectionQuery<Object> aiQuery = session.createSelectionQuery( hql, Object.class );
-				result = assistant.executeQueryToJson( aiQuery, session );
+				final String json = assistant.executeQueryToJson( aiQuery, session );
+				result = TextSegment.from( json, Metadata.from( Map.of( "HQL", hql ) ) );
 			}
 			else {
 				log.debugf( "No HQL extracted from model response" );
-				result = response;
+				result = TextSegment.from( response );
 			}
 
 		}
@@ -70,6 +74,7 @@ public class HibernateContentRetriever implements ContentRetriever {
 			return emptyList();
 		}
 
-		return result == null ? emptyList() : singletonList( Content.from( result ) );
+
+		return singletonList( Content.from( result ) );
 	}
 }

@@ -5,6 +5,7 @@ import java.util.Objects;
 import org.hibernate.StatelessSession;
 import org.hibernate.demo.assistant.HibernateAssistantLC4J;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.spi.SqmQuery;
 
 import org.jboss.logging.Logger;
 
@@ -38,16 +39,20 @@ public class AssistantResource {
 
 		try {
 			Objects.requireNonNull( query, "Query parameter must not be null" );
-			final SelectionQuery<?> select = assistant.createAiQuery(
+			final SelectionQuery<?> select =  assistant.createAiQuery(
 					query,
 					session
 			);
 			final String json = assistant.executeQueryToJson( select, session );
 
-			LOG.debugf( "Assistant response: %s", json );
+			LOG.debugf( "Assistant results: %s", json );
 
 			assistant.getChatMemory()
-					.add( UserMessage.from( "The query returned the following data (in JSON format):\n" + json ) );
+					.add( UserMessage.from(
+							"The query:\n" +
+									"HQL: " + ( (SqmQuery<?>) select ).getQueryString() + "\n" +
+									"Returned the following data (in JSON format): " + json
+					) );
 
 			return Response.ok( json ).build();
 		}

@@ -35,6 +35,7 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.injector.DefaultContentInjector;
 import dev.langchain4j.service.AiServices;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.persistence.metamodel.Metamodel;
 
@@ -62,30 +63,34 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 			"""
 					You are an expert in writing Hibernate Query Language (HQL) queries.
 					You have access to a entity model with the following structure:
-					
+
 					{{it}}
-					
+
 					If a user asks a question that can be answered by querying this model, generate an HQL SELECT query.
 					The query must not include any input parameters.
 					Do not output anything else aside from a valid HQL statement, no explanation, and do not put the query in backticks or code blocks.
 					""" );
 
-	ChatModel chatModel;
-	ChatMemory chatMemory;
-	Metamodel metamodel;
-
+	private final ChatModel chatModel;
+	private final ChatMemory chatMemory;
+	private final Metamodel metamodel;
+	private final Instance<HibernateContentRetriever> contentRetrieverInstance;
 	private final SystemMessage metamodelPrompt;
 	private final boolean structuredJson;
 
+	@Inject
 	public HibernateAssistantLC4J(
 			// Injected ChatModel and ChatMemoryProvider from the Quarkus LC4J extension
 			ChatModel chatModel,
 			ChatMemoryProvider memoryProvider,
 			// Injected Metamodel from the Hibernate ORM extension
-			Metamodel metamodel) {
+			Metamodel metamodel,
+			// Lazy injection to break circular dependency
+			Instance<HibernateContentRetriever> contentRetrieverInstance) {
 		this.chatModel = chatModel;
 		this.chatMemory = memoryProvider.get( "hibernate-assistant-lc4j" );
 		this.metamodel = metamodel;
+		this.contentRetrieverInstance = contentRetrieverInstance;
 		this.structuredJson = true; // default to true as Ollama supports it
 
 		this.metamodelPrompt = getMetamodelPrompt( metamodel );
@@ -94,6 +99,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	}
 
 	private static SystemMessage getMetamodelPrompt(Metamodel metamodel) {
+		// Serialize metamodel to JSON and create system prompt
 		return METAMODEL_PROMPT_TEMPLATE.apply( MetamodelJsonSerializerImpl.INSTANCE.toString( metamodel ) )
 				.toSystemMessage();
 	}
@@ -108,7 +114,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		return chatMemory;
 	}
 
-	public <T> String queryPrompt(String message, SharedSessionContract session, Class<T> resultType) {
+	public <T> String queryPrompt(String message, Class<T> resultType) {
 		final ManagedDomainType<T> managedType = resultType != null && resultType != Object.class && !resultType.isInterface() ?
 				( (JpaMetamodel) metamodel ).findManagedType( resultType ) :
 				null;
@@ -124,7 +130,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 			requestBuilder.responseFormat( hqlResponseFormat() );
 		}
 
-		final ChatRequest chatRequest = ChatRequest.builder().messages( chatMemory.messages() ).build();
+		final ChatRequest chatRequest = requestBuilder.build();
 
 		final ChatResponse chatResponse = chatModel.chat( chatRequest );
 
@@ -133,30 +139,35 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 
 	@Override
 	public <T> SelectionQuery<T> createAiQuery(String message, SharedSessionContract session, Class<T> resultType) {
-		final String response = queryPrompt( message, session, resultType );
-		final String hql = extractHql( response, structuredJson );
+		final String response = queryPrompt( message, resultType );
+		final String hql = extractHql( response );
 
 		log.debugf( "Extracted HQL: %s", hql );
 
 		return session.createSelectionQuery( hql, resultType );
 	}
 
-	public static String extractHql(String response, boolean structuredJson) {
-//		log.debugf( "Raw model response: %s", response );
+	/**
+	 * Extracts an HQL query from the model response, using the configured extraction method.
+	 *
+	 * @param response the model response
+	 *
+	 * @return the extracted HQL query, or {@code null} if no query could be extracted
+	 */
+	public String extractHql(String response) {
 		if ( structuredJson ) {
-			final HqlHolder hqlHolder;
 			try {
-				hqlHolder = new ObjectMapper().readValue( response, HqlHolder.class );
+				final HqlHolder hqlHolder = new ObjectMapper().readValue( response, HqlHolder.class );
 				return hqlHolder.hql();
 			}
 			catch (JsonProcessingException e) {
 				log.warn( "Failed to extract HQL from JSON format" );
 			}
 		}
-		return extractHql( response );
+		return extractHqlFromText( response );
 	}
 
-	static String extractHql(String response) {
+	private static String extractHqlFromText(String response) {
 		// Try our best to extract valid HQL from text
 		final String regex = "(?i)\\bSELECT\\b.*?(?:;|\\n|$)";
 		final Pattern pattern = Pattern.compile( regex );
@@ -166,9 +177,6 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		}
 		return null;
 	}
-
-	@Inject
-	HibernateContentRetriever contentRetriever;
 
 	/**
 	 * {@inheritDoc}
@@ -187,7 +195,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 	@Override
 	public String executeQuery(String message, SharedSessionContract session) {
 		final RetrievalAugmentor rag = DefaultRetrievalAugmentor.builder()
-				.contentRetriever( contentRetriever )
+				.contentRetriever( contentRetrieverInstance.get() )
 				.contentInjector( DefaultContentInjector.builder()
 //										  .metadataKeysToInclude( List.of( "HQL" ) )
 										  .promptTemplate( INJECTOR_PROMPT_TEMPLATE )
@@ -275,8 +283,8 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		return ResponseFormat.builder().type( JSON ) // type can be either TEXT (default) or JSON
 				.jsonSchema( JsonSchema.builder().name( "HQL" )
 									 .rootElement( JsonObjectSchema.builder()
-														   .addStringProperty( "hqlQuery" )
-														   .required( "hqlQuery" )
+														   .addStringProperty( "hql" )
+														   .required( "hql" )
 														   .build() ).build() ).build();
 	}
 }

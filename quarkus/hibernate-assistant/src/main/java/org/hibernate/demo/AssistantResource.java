@@ -22,11 +22,14 @@ import jakarta.ws.rs.core.Response;
 public class AssistantResource {
 	private static final Logger LOG = Logger.getLogger( AssistantResource.class );
 
-	@Inject
-	StatelessSession session;
+	private final StatelessSession session;
+	private final HibernateAssistantLC4J assistant;
 
 	@Inject
-	HibernateAssistantLC4J assistant;
+	public AssistantResource(StatelessSession session, HibernateAssistantLC4J assistant) {
+		this.session = session;
+		this.assistant = assistant;
+	}
 
 	/**
 	 * Executes a natural language query and returns data in JSON format.

@@ -13,12 +13,15 @@ public class Address implements Serializable {
 
 	private String street;
 
+	private String country;
+
 	public Address() {
 	}
 
-	public Address(String city, String street) {
+	public Address(String city, String street, String country) {
 		this.city = city;
 		this.street = street;
+		this.country = country;
 	}
 
 	public String getCity() {
@@ -35,5 +38,13 @@ public class Address implements Serializable {
 
 	public void setStreet(String street) {
 		this.street = street;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
 	}
 }

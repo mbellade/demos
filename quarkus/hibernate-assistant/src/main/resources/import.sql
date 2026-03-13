@@ -1,10 +1,10 @@
-insert into company_table (id, name, city, street) values(1, 'Red Hat', 'Raleigh', 'Varsity Drive');
-insert into company_table (id, name, city, street) values(2, 'IBM', 'Armonk', 'Orchard Road');
-insert into company_table (id, name, city, street) values(3, 'Belladelli Giovanni Jewelry', 'Pegognaga', 'Via Roma');
-insert into company_table (id, name, city, street) values(4, 'MB startup', null, null);
-insert into company_table (id, name, city, street) values(7, 'Apple', 'Cupertino', 'Apple Park');
-insert into company_table (id, name, city, street) values(5, 'Alphabet', 'Mountain View', 'Googleplex');
-insert into company_table (id, name, city, street) values(6, 'American Express', 'New York City', 'Vesey Street');
+insert into company_table (id, name, city, street, country) values(1, 'Red Hat', 'Raleigh', 'Varsity Drive', 'USA');
+insert into company_table (id, name, city, street, country) values(2, 'IBM', 'Armonk', 'Orchard Road', 'USA');
+insert into company_table (id, name, city, street, country) values(3, 'Belladelli Giovanni Jewelry', 'Pegognaga', 'Via Roma', 'Italy');
+insert into company_table (id, name, city, street, country) values(4, 'MB startup', null, null, 'Italy');
+insert into company_table (id, name, city, street, country) values(7, 'Apple', 'Cupertino', 'Apple Park', 'USA');
+insert into company_table (id, name, city, street, country) values(5, 'Alphabet', 'Mountain View', 'Googleplex', 'USA');
+insert into company_table (id, name, city, street, country) values(6, 'American Express', 'New York City', 'Vesey Street', 'USA');
 
 insert into employee_table (id, first_name, last_name, salary, works_at) values(1, 'Marco', 'Belladelli', 500000, 1);
 insert into employee_table (id, first_name, last_name, salary, works_at) values(2, 'Andrea', 'Boriero', 100000, 1);

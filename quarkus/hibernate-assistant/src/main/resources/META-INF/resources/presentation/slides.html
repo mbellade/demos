@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talk to Your Data — Hibernate, Quarkus &amp; LangChain4j</title>
+  <link rel="icon" type="image/svg+xml" href="/img/hibernate_icon.svg">
+
+  <link rel="stylesheet" href="vendor/reveal.js/dist/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="vendor/reveal.js/dist/theme/black.css" id="theme">
+  <link rel="stylesheet" href="vendor/highlight.js/isbl-editor-dark.min.css">
+  <style>
+    :root {
+      --r-background-color: #1b212c;
+      --r-main-color: #e0e0e0;
+      --r-heading-color: #bcae79;
+      --r-link-color: #bcae79;
+      --r-link-color-hover: #d4c98f;
+      --r-selection-background-color: #bcae79;
+    }
+    .reveal {
+      font-size: 32px;
+    }
+    .reveal h1 {
+      font-size: 2.2em;
+      text-shadow: 0 0 20px rgba(188,174,121,0.3);
+    }
+    .reveal h3 {
+      font-size: 1.2em;
+      color: #d4c98f;
+    }
+    .reveal ul {
+      display: block;
+    }
+    .reveal li {
+      margin-bottom: 8px;
+    }
+    .reveal pre {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border-radius: 8px;
+      width: 95%;
+    }
+    .reveal pre code {
+      max-height: 500px;
+      padding: 15px 20px;
+    }
+    .reveal table {
+      font-size: 0.75em;
+    }
+    .reveal table th {
+      background: rgba(188,174,121,0.2);
+      color: #bcae79;
+      border-bottom: 2px solid #bcae79;
+    }
+    .reveal table td {
+      border-bottom: 1px solid #333;
+    }
+    .reveal .subtitle {
+      color: #59666c;
+      font-size: 0.7em;
+      font-style: italic;
+    }
+    .reveal .section-title h2 {
+      font-size: 1.8em;
+      border-bottom: 3px solid #bcae79;
+      padding-bottom: 0.3em;
+      display: inline-block;
+    }
+    .reveal .section-title p {
+      color: #59666c;
+      font-style: italic;
+    }
+    .reveal .highlight-box {
+      background: rgba(188,174,121,0.1);
+      border-left: 4px solid #bcae79;
+      padding: 15px 25px;
+      margin: 20px 0;
+      text-align: left;
+      border-radius: 0 8px 8px 0;
+    }
+    .reveal .live-badge {
+      display: inline-block;
+      background: #e74c3c;
+      color: white;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.6em;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .reveal .tech-stack {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+    }
+    .reveal .tech-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(188,174,121,0.3);
+      border-radius: 12px;
+      padding: 25px 20px;
+      width: 280px;
+      text-align: center;
+    }
+    .reveal .tech-card h3 {
+      margin-top: 0;
+      font-size: 1.05em;
+    }
+    .reveal .tech-card p {
+      font-size: 0.7em;
+      color: #aaa;
+      margin-bottom: 0;
+    }
+    .reveal .tech-card img {
+      height: 60px;
+      margin-bottom: 10px;
+    }
+    .reveal .diagram-img {
+      max-width: 90%;
+      border-radius: 8px;
+      margin: 15px auto;
+      display: block;
+      background: white;
+      padding: 20px 30px;
+    }
+    .reveal .screenshot-img {
+      max-width: 85%;
+      border-radius: 10px;
+      box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+      margin: 15px auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="reveal">
+<div class="slides">
+
+  <!-- ========== SLIDE 1: TITLE ========== -->
+  <section>
+    <h1>Talk to Your Data</h1>
+    <p>Natural Language Data Access in Java with</p>
+    <h3>Hibernate &bull; Quarkus &bull; LangChain4j</h3>
+    <br>
+    <p class="subtitle">Marco Belladelli - Software Developer @ IBM</p>
+    <aside class="notes">
+      Welcome the audience. Tease the outcome: "By the end of this talk,
+      you'll see how any user — not just developers — can query your database using plain English."
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 2: ABOUT ME ========== -->
+  <section>
+
+    <h2>About Me</h2>
+    <h3>Marco Belladelli</h3>
+    <ul>
+      <li>Software Developer @ IBM</li>
+      <li>Hibernate team, ORM maintainer</li>
+      <li>Contributor to Quarkus and LangChain4j</li>
+      <li><a href="https://github.com/mbellade">github.com/mbellade</a></li>
+    </ul>
+    <aside class="notes">
+      Brief intro. Keep it short — the audience is here for the content.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 3: INTRODUCTION (section) ========== -->
+  <section class="section-title">
+
+    <h2>Introduction &amp; Context</h2>
+    <aside class="notes">Transition into the three technologies and the problem we're solving.</aside>
+  </section>
+
+  <!-- ========== SLIDE 4: THE JAVA DATA STACK ========== -->
+  <section>
+
+    <h2>The Java Data Stack</h2>
+    <div class="tech-stack">
+      <div class="tech-card">
+        <img src="/img/hibernate_icon.svg" alt="Hibernate">
+        <h3>Hibernate ORM</h3>
+        <p>The bridge between Java objects and relational databases.</p>
+      </div>
+      <div class="tech-card">
+        <img src="images/quarkus_logo.png" alt="Quarkus">
+        <h3>Quarkus</h3>
+        <p>Java runtime with fast startup, live reload, and a rich extension ecosystem.</p>
+      </div>
+      <div class="tech-card">
+        <img src="images/langchain4j_logo.png" alt="LangChain4j">
+        <h3>LangChain4j</h3>
+        <p>The emerging standard for LLM integration in Java - unified API for AI model orchestration.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Brief intro of each technology for audience members who may not know all three.
+      Emphasize that these are mature, production-ready tools — not experimental.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 5: TRADITIONAL DATA FLOW ========== -->
+  <section>
+
+    <h2>The Traditional Data Flow</h2>
+    <p>How Java apps access data today:</p>
+    <img src="images/01_traditional_flow.png" alt="Traditional flow: Java app sends HQL to Hibernate, which translates to SQL for the database" class="diagram-img">
+    <ul>
+      <li>Developer writes HQL or JPQL queries</li>
+      <li>Hibernate translates to SQL, maps results to Java objects</li>
+      <li>Works great... but requires knowing the query language and the domain model</li>
+    </ul>
+    <aside class="notes">
+      This is what we've been doing for 20+ years. It works, but it's developer-centric.
+      What if we could open this up to everyone?
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 6: THE PROBLEM ========== -->
+  <section>
+
+    <h2>LLMs Don't Know Your Data</h2>
+    <p>LLMs are powerful, but they lack context:</p>
+    <ul>
+      <li>Trained on vast public data - they <em>know</em> HQL syntax</li>
+      <li>They do <strong>NOT</strong> know:
+        <ul>
+          <li>Your entity model</li>
+          <li>Your table structure</li>
+          <li>Your business relationships</li>
+          <li>Your data</li>
+        </ul>
+      </li>
+    </ul>
+    <div class="highlight-box fragment">
+      <strong>The gap:</strong> How do we give an LLM the context it needs
+      to write queries against <em>your</em> database?
+    </div>
+    <aside class="notes">
+      This is the core problem we're solving today. The LLM is capable
+      of writing HQL — it just doesn't know what to write it about.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 7: HIBERNATE ASSISTANT (section) ========== -->
+  <section class="section-title">
+
+    <h2>The Hibernate Assistant</h2>
+    <aside class="notes">Transition into the solution.</aside>
+  </section>
+
+  <!-- ========== SLIDE 8: INTRODUCING HIBERNATE ASSISTANT ========== -->
+  <section>
+
+    <h2>Introducing <code style="white-space: nowrap">hibernate-assistant</code></h2>
+    <p>A new module in Hibernate ORM that acts as a bridge between your mapped domain model and LLMs.</p>
+    <br>
+    <div class="highlight-box">
+      <strong>1. Metamodel Serialization</strong><br>
+      Describes your entire entity model (entities, attributes, relationships)
+      in a JSON format consumable by LLMs
+    </div>
+    <div class="highlight-box">
+      <strong>2. Results Serialization</strong><br>
+      Transforms complex ORM query results (objects, collections, embeddables,
+      associations) into LLM-friendly text
+    </div>
+    <aside class="notes">
+      Hibernate already knows everything about your domain model.
+      The assistant module simply makes that knowledge available to AI models.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 9: WHY HIBERNATE? ========== -->
+  <section>
+
+    <h2>Why Hibernate?</h2>
+    <table>
+      <thead>
+        <tr><th>Advantage</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr class="fragment"><td><strong>Constrained Access</strong></td><td>LLM can only access mapped entities and their fields - no arbitrary table access</td></tr>
+        <tr class="fragment"><td><strong>Fail-Early Validation</strong></td><td>Invalid HQL is caught <em>before</em> it reaches the database</td></tr>
+        <tr class="fragment"><td><strong>Self-Correction</strong></td><td>Hibernate's clear error messages can be fed back to the LLM to fix mistakes</td></tr>
+        <tr class="fragment"><td><strong>Portability</strong></td><td>One query language (HQL) works across all supported databases</td></tr>
+        <tr class="fragment"><td><strong>Handling Complexity</strong></td><td>HQL is closer to natural language - associations, embeddables, inheritance are simpler</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">
+      This is a key selling point. Using Hibernate as the intermediary makes the whole system
+      more reliable and less prone to hallucinations. Emphasize "constrained access" —
+      this is a security advantage too.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 10: BUILDING THE ASSISTANT (section) ========== -->
+  <section class="section-title">
+
+    <h2>Building the Assistant</h2>
+    <p>Live Demo</p>
+    <aside class="notes">
+      Transition to IDE for live coding. Before the system prompt, show:
+
+      1. DOMAIN MODEL — Open the entity source files in the IDE:
+        - Company (id, name, @Embedded Address, @OneToMany employees)
+        - Employee (id, firstName, lastName, salary, @ManyToOne company, @ManyToMany projects)
+        - Project (@Id name, startDate, @ManyToMany employees)
+        - Address (@Embeddable: city, street)
+         Show import.sql with sample data (Red Hat, IBM, Apple, etc.).
+         "This is a simple but realistic domain model — let's see how we can talk to it."
+
+      2. DEPENDENCIES — Show pom.xml briefly. Key deps:
+        - quarkus-hibernate-orm
+        - quarkus-langchain4j-ollama (or openai)
+        - hibernate-assistant
+         Plus JDBC driver, Quarkus REST.
+         Highlight that the setup is minimal.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 11: SYSTEM PROMPT ========== -->
+  <section>
+
+    <div class="live-badge">Live Coding</div>
+    <h2>The System Prompt</h2>
+    <h3>Metamodel Serialization</h3>
+    <ul>
+      <li>Use <code>MetamodelJsonSerializer</code> to describe the entire entity model as JSON</li>
+      <li>Inject it into a <code>SystemMessage</code> to instruct the LLM</li>
+    </ul>
+    <div class="highlight-box fragment">
+      The LLM now knows your domain model as well as you do.
+    </div>
+    <aside class="notes">
+      This is the critical piece. Switch to the IDE — show the code that serializes
+      the metamodel and creates the system prompt. Then show the actual serialized JSON
+      output so the audience sees what the LLM receives.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 12: GENERATING HQL ========== -->
+  <section>
+
+    <div class="live-badge">Live Coding</div>
+    <h2>Generating HQL from Natural Language</h2>
+    <ul>
+      <li>Send the user's natural language request to the LLM via <code>ChatModel</code></li>
+      <li>The LLM generates a valid HQL query based on the metamodel context</li>
+      <li>Extract the HQL from the structured response</li>
+    </ul>
+    <div class="highlight-box fragment">
+      <em>"Extract all companies with a name starting with A"</em>
+      <br><br>
+      <code>SELECT c FROM Company c WHERE LOWER(c.name) LIKE 'a%'</code>
+    </div>
+    <aside class="notes">
+      Switch to IDE. Show the chat request code, then type the natural language query
+      live. Show the generated HQL. Point out that the LLM uses LOWER() for
+      case-insensitivity — it understands HQL functions.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 13: EXECUTING QUERY ========== -->
+  <section>
+
+    <div class="live-badge">Live Coding</div>
+    <h2>Executing &amp; Serializing Results</h2>
+    <ul>
+      <li>Execute the generated HQL via Hibernate's <code>StatelessSession</code></li>
+      <li>Serialize results to JSON with <code>ResultsJsonSerializer</code></li>
+      <li>Handles embedded types, associations, collections - not just flat rows</li>
+    </ul>
+    <img src="images/03_companies_a.png" alt="Query result: companies starting with A displayed in a table" class="screenshot-img fragment" style="max-width: 75%;">
+    <aside class="notes">
+      Switch to IDE. Show the query execution and result serialization code.
+      Execute the query live and show the JSON output.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 14: RAG PIPELINE (section) ========== -->
+  <section class="section-title">
+
+    <h2>RAG Pipeline</h2>
+    <p>Live Demo</p>
+    <aside class="notes">Transition to the RAG section.</aside>
+  </section>
+
+  <!-- ========== SLIDE 15: WHAT IS RAG? ========== -->
+  <section>
+
+    <h2>Retrieval-Augmented Generation</h2>
+    <br>
+    <ul>
+      <li>Enrich the LLM's responses with <em>real information from your database</em></li>
+      <li>Retrieve relevant data first, then let the LLM <em>reason</em> about it</li>
+      <li>The LLM can now provide informed, contextual answers grounded in your actual data</li>
+    </ul>
+    <br>
+    <div class="highlight-box fragment">
+      The LLM doesn't know your data - but with RAG, we can feed it the right
+      information at the right time, so its responses reflect what's actually in your database.
+    </div>
+    <aside class="notes">
+      Brief explanation for those unfamiliar with RAG.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 16: IMPLEMENTING RAG ========== -->
+  <section>
+
+    <div class="live-badge">Live Coding</div>
+    <h2>Implementing RAG</h2>
+    <ul>
+      <li>Implement LangChain4j's <code>ContentRetriever</code> interface</li>
+      <li>Use our assistant to generate HQL, execute queries, and serialize results</li>
+      <li>Wire it into a <code>RetrievalAugmentor</code> with a prompt template that constrains the LLM to answer <em>based strictly on the retrieved data</em></li>
+    </ul>
+    <div class="highlight-box fragment">
+      This is where Hibernate meets RAG - the content retriever uses
+      our assistant to fetch data, then feeds it into the LangChain4j pipeline.
+    </div>
+    <aside class="notes">
+      Switch to IDE. Show HibernateContentRetriever implementing ContentRetriever,
+      then the RAG wiring with DefaultRetrievalAugmentor and AiServices.
+      Highlight the injector prompt template — key to reducing hallucinations.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 17: RAG IN ACTION ========== -->
+  <section>
+
+    <div class="live-badge">Live Demo</div>
+    <h2>RAG in Action</h2>
+    <p>Ask: <em>"How many companies with at least 5000 employees<br>can be found in the city of Modena?"</em></p>
+    <div class="fragment">
+      <pre><code class="language-sql" data-trim>
+SELECT COUNT(c) FROM Company c
+WHERE c.address.city = 'Modena'
+AND SIZE(c.employees) >= 5000
+      </code></pre>
+      <img src="images/04_companies_modena.png" alt="RAG response: natural language answer about companies in Modena" class="screenshot-img" style="max-width: 80%;">
+    </div>
+    <aside class="notes">
+      This is the "wow" moment. Type the question live. Show the generated HQL
+      (non-trivial — uses embedded address, SIZE function). Show the natural language
+      response. "The user never saw HQL, never saw SQL, never saw JSON. They asked a
+      question and got an answer."
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 18: CHATBOT & MCP (section) ========== -->
+  <section class="section-title">
+
+    <h2>Chatbot &amp; MCP Server</h2>
+    <p>Live Demo</p>
+    <aside class="notes">
+      Transition to the chatbot UI and MCP. Before the chatbot demo, show in IDE:
+
+      REST ENDPOINTS — Show AssistantResource briefly:
+     - GET /assistant/json — takes natural language query, returns serialized JSON data
+     - GET /assistant/ask — takes natural language query, returns RAG-powered natural language response
+      "Two endpoints — one for structured data consumption (APIs, front-ends),
+      one for conversational interaction."
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 19: CHATBOT UI ========== -->
+  <section>
+
+    <div class="live-badge">Live Demo</div>
+    <h2>The Chatbot UI</h2>
+    <img src="images/05_employees_projects.png" alt="Chatbot UI showing employee queries, follow-up questions, and contextual answers" class="screenshot-img">
+    <aside class="notes">
+      This is the main interactive demo. Spend time here — let the audience see the
+      chatbot in action. Show different types of queries. Toggle between JSON and natural
+      language modes. Ask follow-up questions to demonstrate contextual memory.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 20: MCP ========== -->
+  <section>
+
+    <h2>Model Context Protocol (MCP)</h2>
+    <ul>
+      <li>Open standard for connecting AI models with tools and data providers</li>
+      <li>Acts like a <strong>universal adapter</strong> for AI agents</li>
+      <li>Your Hibernate Assistant becomes a <strong>data tool</strong> that any AI agent can discover and use</li>
+    </ul>
+    <div class="highlight-box fragment">
+      Think of it as a USB port for AI - any compatible agent can plug in
+      and access your data.
+    </div>
+    <aside class="notes">
+      Brief intro to MCP for the audience.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 21: MCP IMPLEMENTATION ========== -->
+  <section>
+
+    <div class="live-badge">Live Coding</div>
+    <h2>MCP Server Implementation</h2>
+    <ul>
+      <li>Annotate methods with <code>@Tool</code> from the Quarkus MCP Server extension</li>
+      <li>Expose tools like <code>hibernate_get_metamodel</code> and <code>hibernate_query</code></li>
+      <li>Reuse the same assistant logic we already built</li>
+    </ul>
+    <div class="highlight-box fragment">
+      Two annotations and your database is available to any MCP-compatible agent.
+    </div>
+    <aside class="notes">
+      Switch to IDE. Show the HibernateAssistantMCP class — it's remarkably simple.
+      Highlight how the Quarkus MCP Server extension handles all the protocol details.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 22: MCP IN ACTION ========== -->
+  <section>
+
+    <div class="live-badge">Live Demo</div>
+    <h2>MCP in Action</h2>
+    <ul>
+      <li>Connect an external AI agent to the MCP server</li>
+      <li>The agent discovers the Hibernate tools automatically</li>
+      <li>Ask the agent a question about your data</li>
+      <li>Watch it invoke <code>hibernate_query</code> autonomously</li>
+    </ul>
+    <div class="highlight-box fragment">
+      Your Java application is now part of the AI ecosystem -
+      any MCP-compatible agent can query your database.
+    </div>
+    <aside class="notes">
+      If possible, demonstrate connecting Claude Desktop or another MCP client.
+      Show the agent discovering the tools and querying the database.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 23: WRAP-UP (section) ========== -->
+  <section class="section-title">
+
+    <h2>Wrap-up</h2>
+    <aside class="notes">Transition to conclusion.</aside>
+  </section>
+
+  <!-- ========== SLIDE 24: THE FULL PICTURE ========== -->
+  <section>
+
+    <h2>The Full Picture</h2>
+    <img src="images/02_ai_flow.png" alt="AI flow: User prompts go to LLM, which exchanges metamodel schema and HQL queries with Hibernate, which talks SQL to the database" class="diagram-img">
+    <ul>
+      <li>User asks a question in plain English</li>
+      <li>LLM generates HQL using metamodel context</li>
+      <li>Hibernate executes the query, serializes results</li>
+      <li>Results fed back to LLM for a conversational answer</li>
+    </ul>
+    <aside class="notes">
+      Recap the full architecture. "We took an existing Hibernate domain model and,
+      with minimal code, made it accessible via natural language — both for human users
+      through a chatbot and for AI agents through MCP."
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 25: KEY TAKEAWAYS ========== -->
+  <section>
+
+    <h2>Key Takeaways</h2>
+    <ol>
+      <li class="fragment"><strong>Hibernate already knows your domain</strong>: the Assistant module simply exposes that knowledge to LLMs</li>
+      <li class="fragment"><strong>HQL over SQL</strong>: type safety, constrained access, fail-early validation, better portability</li>
+      <li class="fragment"><strong>RAG with real data</strong>: ground LLM responses in your actual database, reducing hallucinations</li>
+      <li class="fragment"><strong>MCP makes it extensible</strong>: expose your data to any AI agent in the ecosystem</li>
+      <li class="fragment"><strong>Minimal code</strong>: a few classes, a few annotations, and your data speaks natural language</li>
+    </ol>
+    <aside class="notes">
+      Emphasize how little code was needed. The real power comes from leveraging
+      what Hibernate already knows.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 26: GETTING STARTED ========== -->
+  <section>
+
+    <h2>Getting Started</h2>
+    <h3>Try it yourself:</h3>
+    <ul>
+      <li><code>hibernate-assistant</code> module - available since ORM 7.3</li>
+      <li>Quarkus LangChain4j: <code>quarkus-langchain4j-*</code></li>
+      <li>Quarkus MCP Server: <code>quarkus-mcp-server-*</code></li>
+    </ul>
+    <br>
+    <h3>Resources:</h3>
+    <ul>
+      <li>Hibernate ORM: <a href="https://hibernate.org/orm">hibernate.org/orm</a></li>
+      <li>Quarkus: <a href="https://quarkus.io">quarkus.io</a></li>
+      <li>LangChain4j: <a href="https://docs.langchain4j.dev">docs.langchain4j.dev</a></li>
+      <li>Demo source code: <a href="https://github.com/mbellade/demos/tree/main/quarkus/hibernate-assistant">github.com/mbellade/demos</a></li>
+    </ul>
+    <aside class="notes">
+      Point people to resources. Mention that the demo code will be available.
+    </aside>
+  </section>
+
+  <!-- ========== SLIDE 27: THANK YOU ========== -->
+  <section>
+    <h1>Thank You!</h1>
+    <h2>Talk to Your Data</h2>
+    <br>
+    <h3>Questions?</h3>
+    <br>
+    <p class="subtitle">Marco Belladelli &bull; <a href="https://github.com/mbellade">github.com/mbellade</a></p>
+    <aside class="notes">
+      Open the floor for questions. Keep the demo app running so you can answer
+      questions with live examples if needed.
+    </aside>
+  </section>
+
+  <!--
+  ========== APPENDIX ==========
+
+  Timing Guide:
+    Slides 1-6:   Introduction & Context        ~5 min   (5 min)
+    Slides 7-9:   The Hibernate Assistant        ~5 min  (10 min)
+    Slides 10-13: Building the Assistant (demo) ~10 min  (20 min)
+    Slides 14-17: RAG Pipeline (demo)            ~8 min  (28 min)
+    Slides 18-22: Chatbot & MCP (demo)          ~10 min  (38 min)
+    Slides 23-27: Wrap-up & Conclusion           ~5 min  (43 min)
+
+  Pre-Demo Checklist:
+    - Ollama running locally with model loaded
+    - Quarkus dev mode started (mvn quarkus:dev)
+    - Browser open to localhost:8080 (chatbot UI)
+    - IDE open with entity classes, assistant classes ready to show
+    - MCP client configured and ready to connect
+    - Font size increased in IDE and terminal for visibility
+    - Import data loaded and verified
+
+  Demo Query Suggestions:
+    1. Simple (JSON response)
+       "Extract all companies with a name starting with A, regardless of case"
+    2. Intermediate (RAG)
+       "How many american companies do we have on record?"
+    3. Interactive (Chatbot)
+       a. "Extract all employees of the 'Red Hat' company"
+       b. "Which projects are these employees working on?"
+       c. "Are there any employees from other companies working on these projects?"
+  -->
+
+</div>
+</div>
+
+<script src="vendor/reveal.js/dist/reveal.js"></script>
+<script src="vendor/reveal.js/plugin/notes/notes.js"></script>
+<script src="vendor/reveal.js/plugin/highlight/highlight.js"></script>
+<script src="vendor/reveal.js/plugin/zoom/zoom.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    showSlideNumber: 'speaker',
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    center: true,
+    plugins: [RevealNotes, RevealHighlight, RevealZoom]
+  });
+</script>
+</body>
+</html>

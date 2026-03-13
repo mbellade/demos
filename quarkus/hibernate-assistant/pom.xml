@@ -7,12 +7,12 @@
 
     <properties>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.30.7</quarkus.platform.version>
+        <quarkus.platform.version>3.32.3</quarkus.platform.version>
         <quarkus.langchain4j.artifact-id>quarkus-langchain4j-bom</quarkus.langchain4j.artifact-id>
         <quarkus.mcp.server.artifact-id>quarkus-mcp-server-bom</quarkus.mcp.server.artifact-id>
         <skipITs>true</skipITs>
@@ -46,6 +46,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Basic Quarkus dependencies -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
@@ -54,14 +59,25 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
+        <!-- ORM and JDBC -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-deployment</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2</artifactId>
         </dependency>
+        <!-- LangChain4j -->
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-ollama</artifactId>
+        </dependency>
+        <!-- MCP -->
         <dependency>
             <groupId>io.quarkiverse.mcp</groupId>
             <artifactId>quarkus-mcp-server-stdio</artifactId>
@@ -70,10 +86,23 @@
             <groupId>io.quarkiverse.mcp</groupId>
             <artifactId>quarkus-mcp-server-sse</artifactId>
         </dependency>
+        <!-- Hibernate Assistant -->
         <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-ollama</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-assistant</artifactId>
+            <version>7.3.0.CR2</version>
         </dependency>
+        <!-- Dev UI (Chappie) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-assistant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.chappie</groupId>
+            <artifactId>quarkus-chappie</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+        <!-- Web UI / Utilities -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-web-dependency-locator</artifactId>
@@ -90,17 +119,8 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.tool</groupId>
-            <artifactId>hibernate-tools-language</artifactId>
         </dependency>
     </dependencies>
 

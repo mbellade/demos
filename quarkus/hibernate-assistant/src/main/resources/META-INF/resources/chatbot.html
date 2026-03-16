@@ -352,7 +352,7 @@ $(document).ready(function() {
             $container.append($nestedContainer);
             $parentElement.append($container);
 
-            $expandBtn.on('click', function() {
+            function toggleExpand() {
                 if ($nestedContainer.css('display') === 'none') {
                     $nestedContainer.css('display', 'block');
                     $expandBtn.text('-');
@@ -360,7 +360,10 @@ $(document).ready(function() {
                     $nestedContainer.css('display', 'none');
                     $expandBtn.text('+');
                 }
-            });
+            }
+
+            $expandBtn.on('click', toggleExpand);
+            $jsonPreview.on('click', toggleExpand);
         } else {
             let jsonValue;
             if (typeof value === 'string' && ((jsonValue = asJsonObject(value)) !== null)) {

@@ -10,6 +10,12 @@ insert into employee_table (id, first_name, last_name, salary, works_at) values(
 insert into employee_table (id, first_name, last_name, salary, works_at) values(2, 'Andrea', 'Boriero', 100000, 1);
 insert into employee_table (id, first_name, last_name, salary, works_at) values(3, 'Luca', 'Molteni', 200000, 2);
 insert into employee_table (id, first_name, last_name, salary, works_at) values(4, 'Flavia', 'Galeotti', 300000, 3);
+insert into employee_table (id, first_name, last_name, salary, works_at) values(5, 'John', 'Smith', 150000, 2);
+insert into employee_table (id, first_name, last_name, salary, works_at) values(6, 'Sarah', 'Connor', 250000, 7);
+insert into employee_table (id, first_name, last_name, salary, works_at) values(7, 'James', 'Lee', 180000, 7);
+insert into employee_table (id, first_name, last_name, salary, works_at) values(8, 'Emily', 'Chen', 220000, 5);
+insert into employee_table (id, first_name, last_name, salary, works_at) values(9, 'David', 'Kumar', 190000, 5);
+insert into employee_table (id, first_name, last_name, salary, works_at) values(10, 'Lisa', 'Johnson', 170000, 6);
 
 insert into project_table (name, start_date) values('Quarkus', date '2019-03-20');
 insert into project_table (name, start_date) values('Hibernate', date '2001-05-23');

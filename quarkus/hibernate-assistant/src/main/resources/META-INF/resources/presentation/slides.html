@@ -133,6 +133,8 @@
     }
     .reveal .screenshot-img {
       max-width: 85%;
+      max-height: 55vh;
+      object-fit: contain;
       border-radius: 10px;
       box-shadow: 0 6px 30px rgba(0,0,0,0.6);
       margin: 15px auto;
@@ -280,7 +282,12 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 9: WHY HIBERNATE? ========== -->
+  <!-- ========== SLIDE 9: WHAT COULD GO WRONG ========== -->
+  <section>
+    <img src="images/fortune_screenshot.png" alt="News article: AI tool deletes 2.5M row production database" class="screenshot-img">
+  </section>
+
+  <!-- ========== SLIDE 10: WHY HIBERNATE? ========== -->
   <section>
 
     <h2>Why Hibernate?</h2>
@@ -289,7 +296,7 @@
         <tr><th>Advantage</th><th>Description</th></tr>
       </thead>
       <tbody>
-        <tr class="fragment"><td><strong>Constrained Access</strong></td><td>LLM can only access mapped entities and their fields - no arbitrary table access</td></tr>
+        <tr class="fragment"><td><strong>Constrained Access</strong></td><td>LLMs can only access mapped entities and their fields - no arbitrary table access, and can be restricted to read-only queries</td></tr>
         <tr class="fragment"><td><strong>Fail-Early Validation</strong></td><td>Invalid HQL is caught <em>before</em> it reaches the database</td></tr>
         <tr class="fragment"><td><strong>Self-Correction</strong></td><td>Hibernate's clear error messages can be fed back to the LLM to fix mistakes</td></tr>
         <tr class="fragment"><td><strong>Portability</strong></td><td>One query language (HQL) works across all supported databases</td></tr>
@@ -303,7 +310,7 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 10: BUILDING THE ASSISTANT (section) ========== -->
+  <!-- ========== SLIDE 11: BUILDING THE ASSISTANT (section) ========== -->
   <section class="section-title">
 
     <h2>Building the Assistant</h2>
@@ -328,7 +335,7 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 11: SYSTEM PROMPT ========== -->
+  <!-- ========== SLIDE 12: SYSTEM PROMPT ========== -->
   <section>
 
     <div class="live-badge">Live Coding</div>
@@ -348,7 +355,7 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 12: GENERATING HQL ========== -->
+  <!-- ========== SLIDE 13: GENERATING HQL ========== -->
   <section>
 
     <div class="live-badge">Live Coding</div>
@@ -370,15 +377,15 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 13: EXECUTING QUERY ========== -->
+  <!-- ========== SLIDE 14: EXECUTING QUERY ========== -->
   <section>
 
     <div class="live-badge">Live Coding</div>
     <h2>Executing &amp; Serializing Results</h2>
     <ul>
-      <li>Execute the generated HQL via Hibernate's <code>StatelessSession</code></li>
+      <li>Execute the generated HQL via Hibernate's <code>SS</code></li>
       <li>Serialize results to JSON with <code>ResultsJsonSerializer</code></li>
-      <li>Handles embedded types, associations, collections - not just flat rows</li>
+      <li>Handles embedded types, associations, collections</li>
     </ul>
     <img src="images/03_companies_a.png" alt="Query result: companies starting with A displayed in a table" class="screenshot-img fragment" style="max-width: 75%;">
     <aside class="notes">
@@ -387,7 +394,7 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 14: RAG PIPELINE (section) ========== -->
+  <!-- ========== SLIDE 15: RAG PIPELINE (section) ========== -->
   <section class="section-title">
 
     <h2>RAG Pipeline</h2>
@@ -395,7 +402,7 @@
     <aside class="notes">Transition to the RAG section.</aside>
   </section>
 
-  <!-- ========== SLIDE 15: WHAT IS RAG? ========== -->
+  <!-- ========== SLIDE 16: WHAT IS RAG? ========== -->
   <section>
 
     <h2>Retrieval-Augmented Generation</h2>
@@ -415,7 +422,7 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 16: IMPLEMENTING RAG ========== -->
+  <!-- ========== SLIDE 17: IMPLEMENTING RAG ========== -->
   <section>
 
     <div class="live-badge">Live Coding</div>
@@ -436,29 +443,29 @@
     </aside>
   </section>
 
-  <!-- ========== SLIDE 17: RAG IN ACTION ========== -->
+  <!-- ========== SLIDE 18: RAG IN ACTION ========== -->
   <section>
 
     <div class="live-badge">Live Demo</div>
     <h2>RAG in Action</h2>
-    <p>Ask: <em>"How many companies with at least 5000 employees<br>can be found in the city of Modena?"</em></p>
+    <p>Ask: <em>"How many companies with at least 2 employees<br>can be found in the USA?"</em></p>
     <div class="fragment">
       <pre><code class="language-sql" data-trim>
 SELECT COUNT(c) FROM Company c
-WHERE c.address.city = 'Modena'
-AND SIZE(c.employees) >= 5000
+WHERE c.address.country = 'USA'
+AND SIZE(c.employees) >= 2
       </code></pre>
-      <img src="images/04_companies_modena.png" alt="RAG response: natural language answer about companies in Modena" class="screenshot-img" style="max-width: 80%;">
+      <img src="images/04_companies_usa.png" alt="RAG response: natural language answer about companies in the USA" class="screenshot-img" style="max-width: 80%;">
     </div>
     <aside class="notes">
       This is the "wow" moment. Type the question live. Show the generated HQL
-      (non-trivial — uses embedded address, SIZE function). Show the natural language
+      (non-trivial — uses embedded address path c.address.country, SIZE function). Show the natural language
       response. "The user never saw HQL, never saw SQL, never saw JSON. They asked a
       question and got an answer."
     </aside>
   </section>
 
-  <!-- ========== SLIDE 18: CHATBOT & MCP (section) ========== -->
+  <!-- ========== SLIDE 19: CHATBOT & MCP (section) ========== -->
   <section class="section-title">
 
     <h2>Chatbot &amp; MCP Server</h2>
@@ -474,7 +481,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 19: CHATBOT UI ========== -->
+  <!-- ========== SLIDE 20: CHATBOT UI ========== -->
   <section>
 
     <div class="live-badge">Live Demo</div>
@@ -487,7 +494,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 20: MCP ========== -->
+  <!-- ========== SLIDE 21: MCP ========== -->
   <section>
 
     <h2>Model Context Protocol (MCP)</h2>
@@ -505,7 +512,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 21: MCP IMPLEMENTATION ========== -->
+  <!-- ========== SLIDE 22: MCP IMPLEMENTATION ========== -->
   <section>
 
     <div class="live-badge">Live Coding</div>
@@ -524,7 +531,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 22: MCP IN ACTION ========== -->
+  <!-- ========== SLIDE 23: MCP IN ACTION ========== -->
   <section>
 
     <div class="live-badge">Live Demo</div>
@@ -545,14 +552,14 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 23: WRAP-UP (section) ========== -->
+  <!-- ========== SLIDE 24: WRAP-UP (section) ========== -->
   <section class="section-title">
 
     <h2>Wrap-up</h2>
     <aside class="notes">Transition to conclusion.</aside>
   </section>
 
-  <!-- ========== SLIDE 24: THE FULL PICTURE ========== -->
+  <!-- ========== SLIDE 25: THE FULL PICTURE ========== -->
   <section>
 
     <h2>The Full Picture</h2>
@@ -570,7 +577,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 25: KEY TAKEAWAYS ========== -->
+  <!-- ========== SLIDE 26: KEY TAKEAWAYS ========== -->
   <section>
 
     <h2>Key Takeaways</h2>
@@ -587,7 +594,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 26: GETTING STARTED ========== -->
+  <!-- ========== SLIDE 27: GETTING STARTED ========== -->
   <section>
 
     <h2>Getting Started</h2>
@@ -610,7 +617,7 @@ AND SIZE(c.employees) >= 5000
     </aside>
   </section>
 
-  <!-- ========== SLIDE 27: THANK YOU ========== -->
+  <!-- ========== SLIDE 28: THANK YOU ========== -->
   <section>
     <h1>Thank You!</h1>
     <h2>Talk to Your Data</h2>
@@ -648,7 +655,7 @@ AND SIZE(c.employees) >= 5000
     1. Simple (JSON response)
        "Extract all companies with a name starting with A, regardless of case"
     2. Intermediate (RAG)
-       "How many american companies do we have on record?"
+       "How many American companies do we have on record?"
     3. Interactive (Chatbot)
        a. "Extract all employees of the 'Red Hat' company"
        b. "Which projects are these employees working on?"

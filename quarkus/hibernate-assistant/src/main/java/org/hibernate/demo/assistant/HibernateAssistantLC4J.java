@@ -167,7 +167,7 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 		if (matcher.find()) {
 			return matcher.group().trim();
 		}
-		return null;
+		throw new IllegalArgumentException("Failed to extract HQL query from model response");
 	}
 
 	/**

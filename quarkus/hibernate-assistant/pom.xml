@@ -14,7 +14,7 @@
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.32.3</quarkus.platform.version>
         <quarkus.chappie.version>1.6.3</quarkus.chappie.version>
-        <hibernate.version>7.3.0.CR2</hibernate.version>
+        <hibernate.version>7.3.0.Final</hibernate.version>
         <quarkus.langchain4j.artifact-id>quarkus-langchain4j-bom</quarkus.langchain4j.artifact-id>
         <quarkus.mcp.server.artifact-id>quarkus-mcp-server-bom</quarkus.mcp.server.artifact-id>
         <skipITs>true</skipITs>
@@ -102,11 +102,6 @@
         <dependency>
             <groupId>io.quarkiverse.chappie</groupId>
             <artifactId>quarkus-chappie</artifactId>
-            <version>${quarkus.chappie.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.chappie</groupId>
-            <artifactId>quarkus-chappie-deployment</artifactId>
             <version>${quarkus.chappie.version}</version>
         </dependency>
         <!-- Web UI / Utilities -->

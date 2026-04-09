@@ -577,7 +577,8 @@ $(document).ready(function() {
     }
 
     function capitalize(str) {
-        const splitStr = str.toLowerCase().split(' ');
+        // const splitStr = str;
+        const splitStr = str.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(' ');
         for (let i = 0; i < splitStr.length; i++) {
             splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].slice(1);
         }

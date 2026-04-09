@@ -127,6 +127,8 @@ public class HibernateAssistantLC4J implements HibernateAssistant {
 
 		final ChatRequest chatRequest = ChatRequest.builder()
 				.messages(chatMemory.messages())
+				// Enforce consistent reply format with JSON Schema
+				// so that HQL extraction functions smoothly
 				.responseFormat(hqlResponseFormat())
 				.build();
 
